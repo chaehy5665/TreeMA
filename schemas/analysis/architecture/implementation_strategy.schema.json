@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/architecture/implementation_strategy.schema.json",
+  "title": "TreeMA Implementation Strategy",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["recommendedBuildOrder", "phases", "migrationImpact"],
+      "properties": {
+        "recommendedBuildOrder": { "type": "array", "items": { "type": "string" } },
+        "phases": { "type": "array", "items": { "type": "object" } },
+        "migrationImpact": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/analysis/system_map.schema.json",
+  "title": "TreeMA System Map",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["domains", "topLevelComponents", "criticalPaths"],
+      "properties": {
+        "domains": { "type": "array", "items": { "type": "string" } },
+        "topLevelComponents": { "type": "array", "items": { "type": "object" } },
+        "criticalPaths": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  ]
+}

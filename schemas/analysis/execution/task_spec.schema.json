@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/execution/task_spec.schema.json",
+  "title": "TreeMA Task Spec",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": [
+        "taskId",
+        "title",
+        "goal",
+        "inputs",
+        "outputs",
+        "dependencies",
+        "agent",
+        "acceptanceCriteria",
+        "validation"
+      ],
+      "properties": {
+        "taskId": { "type": "string" },
+        "title": { "type": "string" },
+        "goal": { "type": "string" },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "outputs": { "type": "array", "items": { "type": "string" } },
+        "dependencies": { "type": "array", "items": { "type": "string" } },
+        "agent": { "type": "string" },
+        "acceptanceCriteria": { "type": "array", "items": { "type": "string" } },
+        "validation": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  ]
+}

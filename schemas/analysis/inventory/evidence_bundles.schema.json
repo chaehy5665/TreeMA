@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/inventory/evidence_bundles.schema.json",
+  "title": "TreeMA Evidence Bundles",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["bundles"],
+      "properties": {
+        "bundles": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/inventory/scan_rationale.schema.json",
+  "title": "TreeMA Scan Rationale",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["summary", "focusAreas", "notablePaths", "criticalQuestions"],
+      "properties": {
+        "summary": { "type": "string" },
+        "focusAreas": { "type": "array", "items": { "type": "string" } },
+        "notablePaths": { "type": "array", "items": { "type": "string" } },
+        "criticalQuestions": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  ]
+}

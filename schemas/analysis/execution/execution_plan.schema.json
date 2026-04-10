@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/execution/execution_plan.schema.json",
+  "title": "TreeMA Execution Plan",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["gateStatus", "phases", "tasks"],
+      "properties": {
+        "gateStatus": { "type": "string", "enum": ["ready", "blocked", "unavailable"] },
+        "phases": { "type": "array", "items": { "type": "object" } },
+        "tasks": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  ]
+}

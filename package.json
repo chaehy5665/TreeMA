@@ -1,0 +1,19 @@
+{
+  "name": "treema",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/app-server.mjs",
+    "desktop": "electron .",
+    "validate": "node scripts/validate-state.mjs examples/project_state.example.json && node scripts/check-docs.mjs",
+    "validate:state": "node scripts/validate-state.mjs examples/project_state.example.json",
+    "validate:docs": "node scripts/check-docs.mjs",
+    "treema": "node scripts/treema.mjs",
+    "analyze": "node scripts/treema.mjs analyze ."
+  },
+  "devDependencies": {
+    "electron": "^41.0.0"
+  }
+}

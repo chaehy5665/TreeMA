@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/root-manifest.schema.json",
+  "title": "TreeMA Analysis Root Manifest",
+  "allOf": [
+    { "$ref": "./artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["run", "summary", "artifacts", "stageStatus", "gate"],
+      "properties": {
+        "run": {
+          "type": "object",
+          "required": [
+            "projectRoot",
+            "projectName",
+            "generatedAt",
+            "analysisVersion",
+            "scanMode",
+            "scanCompleteness",
+            "aiRequired",
+            "provider",
+            "modelProfile",
+            "promptSetVersion",
+            "migrationImpact"
+          ],
+          "properties": {
+            "projectRoot": { "type": "string" },
+            "projectName": { "type": "string" },
+            "generatedAt": { "type": "string", "format": "date-time" },
+            "analysisVersion": { "type": "string" },
+            "scanMode": { "type": "string", "enum": ["project", "quick"] },
+            "scanCompleteness": { "type": "string", "enum": ["semantic", "inventory_only", "partial"] },
+            "aiRequired": { "type": "boolean" },
+            "provider": { "type": "string" },
+            "modelProfile": { "type": "string" },
+            "promptSetVersion": { "type": "string" },
+            "migrationImpact": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "summary": {
+          "type": "object",
+          "required": [
+            "projectName",
+            "totalFiles",
+            "totalDirectories",
+            "candidateComponentCount",
+            "componentReportCount",
+            "domainCount",
+            "moduleCount",
+            "taskCount",
+            "frameworks",
+            "projectKinds"
+          ],
+          "properties": {
+            "projectName": { "type": "string" },
+            "totalFiles": { "type": "integer", "minimum": 0 },
+            "totalDirectories": { "type": "integer", "minimum": 0 },
+            "candidateComponentCount": { "type": "integer", "minimum": 0 },
+            "componentReportCount": { "type": "integer", "minimum": 0 },
+            "domainCount": { "type": "integer", "minimum": 0 },
+            "moduleCount": { "type": "integer", "minimum": 0 },
+            "taskCount": { "type": "integer", "minimum": 0 },
+            "frameworks": { "type": "array", "items": { "type": "string" } },
+            "projectKinds": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "artifacts": { "type": "object" },
+        "stageStatus": { "type": "object" },
+        "gate": {
+          "type": "object",
+          "required": [
+            "status",
+            "blockingFindingCount",
+            "nonBlockingFindingCount",
+            "executionArtifactsEmitted"
+          ],
+          "properties": {
+            "status": { "type": "string", "enum": ["ready", "blocked", "unavailable"] },
+            "blockingFindingCount": { "type": "integer", "minimum": 0 },
+            "nonBlockingFindingCount": { "type": "integer", "minimum": 0 },
+            "executionArtifactsEmitted": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  ]
+}

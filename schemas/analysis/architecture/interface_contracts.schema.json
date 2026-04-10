@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/architecture/interface_contracts.schema.json",
+  "title": "TreeMA Interface Contracts",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["interfaces"],
+      "properties": {
+        "interfaces": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/inventory/candidate_components.schema.json",
+  "title": "TreeMA Candidate Components",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["components"],
+      "properties": {
+        "components": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  ]
+}

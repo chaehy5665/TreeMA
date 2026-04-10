@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TreeMA MVP</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="panel panel-sidebar">
+        <div class="sidebar-head">
+          <div class="sidebar-app-header">
+            <div>
+              <span class="sidebar-eyebrow">TreeMA</span>
+              <h1 id="sidebar-workspace-name">Projects</h1>
+            </div>
+            <span id="sidebar-status-chip" class="sidebar-chip">Sample</span>
+          </div>
+
+          <p id="sidebar-workspace-meta" class="sidebar-intro">
+            Navigate the current workspace like a project inbox, with tabs and recent operational threads grouped together.
+          </p>
+        </div>
+
+        <nav id="sidebar-utility-nav" class="sidebar-utility-nav" aria-label="Primary views"></nav>
+
+        <section class="sidebar-projects">
+          <div class="sidebar-section-heading">
+            <div>
+              <span class="sidebar-section-title">Projects</span>
+              <p id="sidebar-section-note" class="sidebar-section-note">
+                Active projects and recent threads from the current workspace.
+              </p>
+            </div>
+            <div class="sidebar-section-actions">
+              <span id="sidebar-project-count" class="sidebar-section-count">0</span>
+              <button id="sidebar-new-project-button" type="button" class="sidebar-new-button">Add</button>
+            </div>
+          </div>
+
+          <div id="workspace-status" class="sidebar-inline-status"></div>
+
+          <div id="sidebar-nav" class="sidebar-nav" aria-label="Project threads"></div>
+        </section>
+
+        <footer class="sidebar-footer">
+          <button id="open-settings-button" type="button" class="sidebar-settings-button" aria-label="Open settings">
+            <span class="sidebar-settings-icon" aria-hidden="true">
+              <svg viewBox="0 0 20 20" focusable="false" aria-hidden="true">
+                <path
+                  d="M11.2 2.2a1 1 0 0 0-2.4 0l-.2 1a6.9 6.9 0 0 0-1.8.8l-.9-.5a1 1 0 0 0-1.4.5l-.8 1.4a1 1 0 0 0 .3 1.3l.8.6a7 7 0 0 0 0 1.9l-.8.6a1 1 0 0 0-.3 1.3l.8 1.4a1 1 0 0 0 1.4.5l.9-.5c.6.3 1.2.6 1.8.8l.2 1a1 1 0 0 0 2.4 0l.2-1c.6-.2 1.2-.5 1.8-.8l.9.5a1 1 0 0 0 1.4-.5l.8-1.4a1 1 0 0 0-.3-1.3l-.8-.6a7 7 0 0 0 0-1.9l.8-.6a1 1 0 0 0 .3-1.3l-.8-1.4a1 1 0 0 0-1.4-.5l-.9.5a6.9 6.9 0 0 0-1.8-.8l-.2-1ZM10 13a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
+            <span class="sidebar-settings-label">Settings</span>
+          </button>
+        </footer>
+      </aside>
+
+      <div class="content-column">
+        <main class="panel panel-main">
+          <div class="main-header">
+            <div>
+              <p id="main-header-kicker" class="main-header-kicker">Active Workspace</p>
+              <h2 id="main-header-title">Operational View</h2>
+              <p id="main-header-description">
+                Read the project as one central document while the left sidebar tracks views and recent work.
+              </p>
+            </div>
+            <div id="main-header-context" class="main-header-context"></div>
+          </div>
+
+          <section class="tab-panel is-active" data-panel="workspace">
+            <div class="panel-header">
+              <h2>Workspace Operations</h2>
+              <p>Imports, live focus, and snapshots now live in the main canvas.</p>
+            </div>
+
+            <div class="workspace-grid">
+              <section class="workspace-panel">
+                <div class="panel-header">
+                  <h3>Imports</h3>
+                  <p>Validate canonical state and review AI proposals.</p>
+                </div>
+                <div class="import-tools">
+                  <label class="field">
+                    <span>Load Canonical State</span>
+                    <input id="state-file-input" type="file" accept="application/json" />
+                  </label>
+                  <label class="field">
+                    <span>Load AI Proposal</span>
+                    <input id="proposal-file-input" type="file" accept="application/json" />
+                  </label>
+                  <button id="export-state-button" class="action-button action-button-secondary">Export State</button>
+                </div>
+                <div id="validation-summary" class="validation-summary"></div>
+              </section>
+
+              <section class="workspace-panel workspace-panel-wide">
+                <div class="panel-header">
+                  <h3>Live Focus</h3>
+                  <p>Current tracks, next queue, and project scope in one place.</p>
+                </div>
+                <div class="workspace-summary-grid">
+                  <div>
+                    <h4 class="workspace-subheading">Current Focus</h4>
+                    <div id="current-focus" class="summary-stack"></div>
+                  </div>
+                  <div>
+                    <h4 class="workspace-subheading">Next Tasks</h4>
+                    <div id="next-tasks" class="summary-stack"></div>
+                  </div>
+                </div>
+                <div class="section-gap">
+                  <h4 class="workspace-subheading">Project Summary</h4>
+                  <div id="project-summary" class="project-summary"></div>
+                </div>
+              </section>
+
+              <section class="workspace-panel workspace-panel-wide">
+                <div class="panel-header">
+                  <h3>Snapshot</h3>
+                  <p>Write the current situation back into `.treema`.</p>
+                </div>
+                <div class="snapshot-form">
+                  <label class="field">
+                    <span>Summary</span>
+                    <textarea id="snapshot-summary-input" rows="4" placeholder="What changed and why it matters"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Focus Items</span>
+                    <textarea id="snapshot-focus-input" rows="3" placeholder="One item per line"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Next Tasks</span>
+                    <textarea id="snapshot-next-input" rows="3" placeholder="One item per line"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Active Risks</span>
+                    <textarea id="snapshot-risks-input" rows="3" placeholder="One item per line"></textarea>
+                  </label>
+                  <button id="save-snapshot-button" class="action-button">Save Snapshot</button>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-panel="structure">
+            <div class="panel-header">
+              <h2>Structure Map</h2>
+              <p>Projects, subprojects, and tracks with state counts.</p>
+            </div>
+            <div id="structure-map" class="structure-map"></div>
+          </section>
+
+          <section class="tab-panel" data-panel="board">
+            <div class="panel-header">
+              <h2>Status Board</h2>
+              <p>Backlog, ready, in progress, blocked, and done across the current workspace.</p>
+            </div>
+            <div class="board-grid">
+              <div>
+                <h3>Tasks</h3>
+                <div id="task-board" class="board-columns"></div>
+              </div>
+              <div>
+                <h3>Risks</h3>
+                <div id="risk-board" class="board-columns"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-panel="timeline">
+            <div class="panel-header">
+              <h2>Decision Log</h2>
+              <p>Recent decisions and risk movement, newest first.</p>
+            </div>
+            <div id="workspace-docs" class="workspace-docs"></div>
+            <div id="recent-decisions" class="recent-decisions"></div>
+            <div id="timeline" class="timeline"></div>
+          </section>
+
+          <section class="tab-panel" data-panel="scan">
+            <div class="panel-header panel-header-actions">
+              <div>
+                <h2>Project Scan</h2>
+                <p>AI-native semantic scan with validator-gated execution review, plus deterministic Quick Scan fallback.</p>
+                <p class="scan-hint">Select any scan card to inspect evidence, confidence, provenance, and execution detail.</p>
+              </div>
+              <div class="panel-header-actions-row">
+                <button id="analyze-project-button" class="action-button">Run Project Scan</button>
+                <button id="quick-scan-button" class="action-button action-button-secondary">Quick Scan</button>
+              </div>
+            </div>
+            <div id="analysis-summary" class="analysis-summary"></div>
+            <div class="scan-layout">
+              <div class="scan-sections">
+                <div class="scan-grid">
+                  <div>
+                    <h3>Component Hierarchy</h3>
+                    <div id="analysis-hierarchy" class="analysis-components"></div>
+                  </div>
+                  <div>
+                    <h3>Dependency Graph</h3>
+                    <div id="analysis-dependencies" class="analysis-resources"></div>
+                  </div>
+                </div>
+                <div class="scan-grid section-gap">
+                  <div>
+                    <h3>Critical User Flows</h3>
+                    <div id="analysis-flows" class="analysis-components"></div>
+                  </div>
+                  <div>
+                    <h3>Execution Roadmap</h3>
+                    <div id="analysis-roadmap" class="analysis-resources"></div>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="scan-inspector-column">
+                <div id="scan-inspector" class="scan-inspector"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-panel="review">
+            <div class="panel-header">
+              <h2>AI Proposal Review</h2>
+              <p>AI proposes. Canonical state changes only after review.</p>
+            </div>
+            <div id="proposal-summary" class="proposal-summary"></div>
+            <div id="proposal-changes" class="proposal-changes"></div>
+          </section>
+        </main>
+      </div>
+
+    </div>
+
+    <div id="settings-modal" class="settings-modal" hidden>
+      <div class="settings-modal-backdrop" data-close-settings="true"></div>
+      <section
+        id="settings-panel"
+        class="settings-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
+      >
+        <div class="settings-modal-header">
+          <div class="sidebar-heading">
+            <span class="sidebar-eyebrow">Workspace Preferences</span>
+            <h2 id="settings-modal-title">Settings</h2>
+            <p>Quiet modal for view and display control.</p>
+          </div>
+          <button
+            id="close-settings-button"
+            type="button"
+            class="action-button action-button-secondary inspector-toggle"
+          >
+            Close
+          </button>
+        </div>
+
+        <div class="settings-layout section-gap">
+          <aside class="settings-sidebar" aria-label="Settings navigation">
+            <div class="settings-sidebar-copy">
+              <span class="sidebar-eyebrow">Preferences</span>
+              <h3>Workspace settings</h3>
+              <p>Adjust local defaults, view routing, interface behavior, and AI account links.</p>
+            </div>
+            <nav id="settings-sidebar-nav" class="settings-sidebar-nav" aria-label="Settings sections"></nav>
+          </aside>
+
+          <div id="settings-content" class="settings-content">
+            <section
+              id="settings-page-general"
+              class="settings-page"
+              data-settings-section="general"
+              aria-labelledby="settings-page-general-title"
+            >
+              <header class="settings-page-header">
+                <h3 id="settings-page-general-title">General</h3>
+                <p>Workspace startup and behavior defaults for this device.</p>
+              </header>
+
+              <div class="settings-card">
+                <label class="settings-row settings-row-select">
+                  <div class="settings-row-copy">
+                    <strong>Landing tab</strong>
+                    <p>Choose the first workspace surface that opens.</p>
+                  </div>
+                  <select id="settings-default-tab">
+                    <option value="workspace">Workspace</option>
+                    <option value="structure">Structure</option>
+                    <option value="board">Board</option>
+                    <option value="timeline">Timeline</option>
+                    <option value="scan">Project Scan</option>
+                    <option value="review">AI Review</option>
+                  </select>
+                </label>
+
+                <label class="settings-row settings-row-toggle">
+                  <div class="settings-row-copy">
+                    <strong>Open scan after analyze</strong>
+                    <p>Switch to Project Scan when a new analysis finishes.</p>
+                  </div>
+                  <input id="settings-auto-open-scan" type="checkbox" role="switch" />
+                </label>
+              </div>
+            </section>
+
+            <section
+              id="settings-page-views"
+              class="settings-page"
+              data-settings-section="views"
+              aria-labelledby="settings-page-views-title"
+            >
+              <header class="settings-page-header">
+                <h3 id="settings-page-views-title">Shortcuts</h3>
+                <p>Jump across dashboard surfaces without leaving the settings panel.</p>
+              </header>
+
+              <div class="settings-card settings-card-shortcuts">
+                <div id="tab-shortcuts" class="shortcut-list"></div>
+              </div>
+            </section>
+
+            <section
+              id="settings-page-appearance"
+              class="settings-page"
+              data-settings-section="appearance"
+              aria-labelledby="settings-page-appearance-title"
+            >
+              <header class="settings-page-header">
+                <h3 id="settings-page-appearance-title">Appearance</h3>
+                <p>Control density and supporting panels across the workspace canvas.</p>
+              </header>
+
+              <div class="settings-card">
+                <label class="settings-row settings-row-select">
+                  <div class="settings-row-copy">
+                    <strong>Density</strong>
+                    <p>Switch between relaxed and compact spacing.</p>
+                  </div>
+                  <select id="settings-density">
+                    <option value="comfortable">Comfortable</option>
+                    <option value="compact">Compact</option>
+                  </select>
+                </label>
+
+                <label class="settings-row settings-row-toggle">
+                  <div class="settings-row-copy">
+                    <strong>Show workspace docs</strong>
+                    <p>Display markdown snapshots inside the timeline view.</p>
+                  </div>
+                  <input id="settings-show-docs" type="checkbox" role="switch" />
+                </label>
+
+                <label class="settings-row settings-row-toggle">
+                  <div class="settings-row-copy">
+                    <strong>Pin sidebars</strong>
+                    <p>Keep the left sidebar sticky while the center panel scrolls.</p>
+                  </div>
+                  <input id="settings-pinned-sidebar" type="checkbox" role="switch" />
+                </label>
+              </div>
+            </section>
+
+            <section
+              id="settings-page-ai-accounts"
+              class="settings-page"
+              data-settings-section="ai-accounts"
+              aria-labelledby="settings-page-ai-accounts-title"
+            >
+              <header class="settings-page-header">
+                <h3 id="settings-page-ai-accounts-title">Providers</h3>
+                <p>Store provider credentials outside `.treema` and verify them from the app.</p>
+              </header>
+
+              <div class="settings-card settings-card-stack">
+                <p id="settings-account-storage" class="settings-account-storage muted"></p>
+
+                <article class="account-card">
+                  <div class="account-card-head">
+                    <div class="settings-row-copy">
+                      <strong>OpenAI</strong>
+                      <p>Use ChatGPT Plus/Pro login as the main path, then keep API key setup as an advanced fallback.</p>
+                    </div>
+                    <span id="settings-openai-badge" class="pill status-backlog">Disconnected</span>
+                  </div>
+
+                  <div class="settings-form">
+                    <div class="settings-provider-primary">
+                      <button id="settings-openai-login" type="button" class="action-button action-button-wide">
+                        Continue with ChatGPT Plus/Pro
+                      </button>
+                      <p class="settings-provider-note muted">
+                        Opens OpenAI in your browser. After login, you can create or copy an API key if this app needs direct API access.
+                      </p>
+                    </div>
+
+                    <div class="settings-provider-divider">
+                      <span>Manual API key fallback</span>
+                    </div>
+
+                    <label class="setting-stack">
+                      <span>API key</span>
+                      <input
+                        id="settings-openai-api-key"
+                        class="setting-input"
+                        type="password"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="sk-..."
+                      />
+                    </label>
+
+                    <label class="setting-stack">
+                      <span>Base URL</span>
+                      <input
+                        id="settings-openai-base-url"
+                        class="setting-input"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="https://api.openai.com/v1"
+                      />
+                    </label>
+
+                    <label class="setting-stack">
+                      <span>Default model</span>
+                      <input
+                        id="settings-openai-model"
+                        class="setting-input"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="gpt-5.4-mini"
+                      />
+                    </label>
+
+                    <div class="action-row">
+                      <button id="settings-openai-save" type="button" class="action-button action-button-secondary">
+                        Save
+                      </button>
+                      <button id="settings-openai-test" type="button" class="action-button">Save + Test</button>
+                    </div>
+
+                    <button
+                      id="settings-openai-disconnect"
+                      type="button"
+                      class="action-button action-button-secondary action-button-wide"
+                    >
+                      Disconnect
+                    </button>
+
+                    <div id="settings-openai-status" class="settings-provider-status"></div>
+                  </div>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-card-head">
+                    <div class="settings-row-copy">
+                      <strong>GitHub Copilot</strong>
+                      <p>Start in your browser to sign up or enable a plan, then use token setup only as an advanced fallback.</p>
+                    </div>
+                    <span id="settings-github-copilot-badge" class="pill status-backlog">Disconnected</span>
+                  </div>
+
+                  <div class="settings-form">
+                    <div class="settings-provider-primary">
+                      <button id="settings-github-copilot-register" type="button" class="action-button action-button-wide">
+                        Open GitHub Copilot Setup
+                      </button>
+                      <p class="settings-provider-note muted">
+                        Opens GitHub Copilot in your browser so you can sign in, choose Free or Pro, and enable access on your account.
+                      </p>
+                    </div>
+
+                    <div class="settings-provider-divider">
+                      <span>Manual token fallback</span>
+                    </div>
+
+                    <label class="setting-stack">
+                      <span>GitHub token</span>
+                      <input
+                        id="settings-github-copilot-token"
+                        class="setting-input"
+                        type="password"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="gho_, ghu_, or github_pat_"
+                      />
+                    </label>
+
+                    <p class="settings-provider-note muted">
+                      Copilot verification works best with OAuth user tokens, GitHub App user tokens, or fine-grained PATs.
+                    </p>
+
+                    <div class="action-row">
+                      <button
+                        id="settings-github-copilot-save"
+                        type="button"
+                        class="action-button action-button-secondary"
+                      >
+                        Save
+                      </button>
+                      <button id="settings-github-copilot-test" type="button" class="action-button">
+                        Save + Test
+                      </button>
+                    </div>
+
+                    <button
+                      id="settings-github-copilot-disconnect"
+                      type="button"
+                      class="action-button action-button-secondary action-button-wide"
+                    >
+                      Disconnect
+                    </button>
+
+                    <div id="settings-github-copilot-status" class="settings-provider-status"></div>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

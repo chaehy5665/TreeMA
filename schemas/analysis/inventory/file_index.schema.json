@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/inventory/file_index.schema.json",
+  "title": "TreeMA File Index",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["files"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "kind", "group"],
+            "properties": {
+              "id": { "type": "string" },
+              "path": { "type": "string" },
+              "kind": { "type": "string" },
+              "group": { "type": "string" },
+              "extension": { "type": "string" },
+              "sizeBytes": { "type": "integer", "minimum": 0 },
+              "lineCount": { "type": "integer", "minimum": 0 },
+              "imports": { "type": "array", "items": { "type": "string" } },
+              "symbolHints": { "type": "array", "items": { "type": "string" } },
+              "evidenceSpans": { "type": "array", "items": { "type": "object" } }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

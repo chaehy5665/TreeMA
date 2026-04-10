@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/inventory/project_inventory.schema.json",
+  "title": "TreeMA Project Inventory",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": [
+        "projectRoot",
+        "projectName",
+        "directories",
+        "topLevelDirectories",
+        "services",
+        "modules",
+        "configs",
+        "routes",
+        "entrypointIds",
+        "summary"
+      ],
+      "properties": {
+        "projectRoot": { "type": "string" },
+        "projectName": { "type": "string" },
+        "directories": { "type": "array", "items": { "type": "string" } },
+        "topLevelDirectories": { "type": "array", "items": { "type": "string" } },
+        "services": { "type": "array", "items": { "type": "object" } },
+        "modules": { "type": "array", "items": { "type": "object" } },
+        "configs": { "type": "array", "items": { "type": "string" } },
+        "routes": { "type": "array", "items": { "type": "object" } },
+        "entrypointIds": { "type": "array", "items": { "type": "string" } },
+        "summary": { "type": "object" }
+      }
+    }
+  ]
+}

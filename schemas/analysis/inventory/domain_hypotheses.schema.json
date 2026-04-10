@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/inventory/domain_hypotheses.schema.json",
+  "title": "TreeMA Domain Hypotheses",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["domains"],
+      "properties": {
+        "domains": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  ]
+}

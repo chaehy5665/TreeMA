@@ -1,0 +1,48 @@
+{
+  "proposalId": "proposal:2026-04-09-001",
+  "basedOnStateVersion": "0.1.0",
+  "summary": "Advance Phase 1A, start alias design, and keep core work narrowly constrained.",
+  "changes": [
+    {
+      "entityType": "task",
+      "entityId": "task:a-bucket-join-coverage",
+      "operation": "update",
+      "reason": "A bucket analysis has enough evidence to move from exploration into an explicit join-coverage implementation plan.",
+      "before": {
+        "status": "in_progress"
+      },
+      "after": {
+        "status": "done",
+        "updatedAt": "2026-04-09T06:00:00Z"
+      }
+    },
+    {
+      "entityType": "task",
+      "entityId": "task:alias-design",
+      "operation": "update",
+      "reason": "The next free focus slot should move into the alias-builder design track rather than opening another core change stream.",
+      "before": {
+        "status": "ready"
+      },
+      "after": {
+        "status": "in_progress",
+        "updatedAt": "2026-04-09T06:00:00Z"
+      }
+    },
+    {
+      "entityType": "risk",
+      "entityId": "risk:core-instability",
+      "operation": "update",
+      "reason": "The focus cap is now explicit, so core instability remains a risk but is better controlled.",
+      "before": {
+        "status": "open",
+        "mitigation": "Limit active tracks to three and route most new work into backlog until current focus clears."
+      },
+      "after": {
+        "status": "monitoring",
+        "mitigation": "Keep active work capped at three tracks and reject incidental production edits outside the focus set.",
+        "updatedAt": "2026-04-09T06:00:00Z"
+      }
+    }
+  ]
+}

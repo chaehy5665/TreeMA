@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/project_structure.schema.json",
+  "title": "TreeMA Project Structure Root Manifest",
+  "$ref": "./analysis/root-manifest.schema.json"
+}

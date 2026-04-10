@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/inventory/scan_priorities.schema.json",
+  "title": "TreeMA Scan Priorities",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["priorities"],
+      "properties": {
+        "priorities": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  ]
+}

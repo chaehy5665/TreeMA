@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TreeMA | Structured project state for AI-native builders</title>
+    <meta
+      name="description"
+      content="TreeMA turns project context into an explicit workspace with durable decisions, visible risks, and human-reviewed AI updates."
+    />
+    <meta
+      property="og:title"
+      content="TreeMA | Structured project state for AI-native builders"
+    />
+    <meta
+      property="og:description"
+      content="A structured project state workspace for AI-native builders who need explicit context, durable decisions, and reviewable updates."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="./assets/landing/og-cover.svg" />
+    <link rel="stylesheet" href="./landing.css" />
+    <script type="module" src="./src/landing.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <div class="landing-shell">
+      <header class="site-header">
+        <a class="brand" href="./landing.html" aria-label="TreeMA landing page">
+          <span class="brand-mark">TM</span>
+          <span class="brand-copy">
+            <strong>TreeMA</strong>
+            <span>Structured project state workspace</span>
+          </span>
+        </a>
+
+        <nav class="site-nav" aria-label="Landing sections">
+          <a href="#problem">Problem</a>
+          <a href="#workflow">Workflow</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#status">Status</a>
+          <a href="#run-locally">Run locally</a>
+        </nav>
+
+        <div class="site-actions">
+          <a class="nav-link" href="./index.html">Open the app</a>
+          <a class="button button-small" href="./README.md">Overview</a>
+        </div>
+      </header>
+
+      <main id="main-content">
+        <section class="hero-section">
+          <div class="hero-copy">
+            <p class="eyebrow">Early product, publicly explained</p>
+            <h1>Structured project state for AI-native builders.</h1>
+            <p class="hero-body">
+              TreeMA gives scattered project context a durable home. Keep structure,
+              decisions, risks, and AI-generated proposals explicit enough to inspect,
+              review, and trust without turning your project into another pile of notes.
+            </p>
+
+            <div class="hero-actions">
+              <a class="button" href="./README.md">Read the Overview</a>
+              <a class="button button-secondary" href="#run-locally">See How It Runs Locally</a>
+            </div>
+
+            <dl class="hero-signals" aria-label="TreeMA product signals">
+              <div>
+                <dt>Canonical core</dt>
+                <dd>`.treema/project_state.json` and staged analysis artifacts</dd>
+              </div>
+              <div>
+                <dt>Human control</dt>
+                <dd>AI proposes updates, humans approve canonical change</dd>
+              </div>
+              <div>
+                <dt>Product shape</dt>
+                <dd>Browser app, Electron desktop shell, and CLI helpers</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="hero-preview">
+            <img
+              src="./assets/landing/hero-preview.svg"
+              alt="Concept preview of TreeMA showing structured workspace surfaces"
+            />
+          </div>
+        </section>
+
+        <section id="problem" class="content-section section-problem">
+          <div class="section-heading">
+            <p class="eyebrow">Problem</p>
+            <h2>AI moves fast when context stays coherent.</h2>
+          </div>
+
+          <div class="problem-grid">
+            <article class="problem-card">
+              <h3>Scattered notes collapse under pressure</h3>
+              <p>
+                Decisions, task state, and open risks drift across chats, markdown files,
+                temporary scratchpads, and half-remembered plans.
+              </p>
+            </article>
+            <article class="problem-card">
+              <h3>Project meaning becomes implicit</h3>
+              <p>
+                Builders know what matters right now, but the logic behind scope, tradeoffs,
+                and priorities rarely survives in a durable structure.
+              </p>
+            </article>
+            <article class="problem-card">
+              <h3>AI context turns fragile</h3>
+              <p>
+                Without a stable workspace contract, every new prompt has to reconstruct the
+                same mental model from incomplete evidence.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="workflow" class="content-section">
+          <div class="section-heading">
+            <p class="eyebrow">How TreeMA Works</p>
+            <h2>One explicit workspace, three durable loops.</h2>
+            <p>
+              TreeMA keeps project state explicit first, then layers analysis and AI review on
+              top of that contract instead of replacing it.
+            </p>
+          </div>
+
+          <div class="workflow-grid">
+            <article class="workflow-step">
+              <span class="step-index">01</span>
+              <h3>Record canonical state</h3>
+              <p>
+                Structure the project map, current tasks, decisions, and risks in a workspace
+                that stays legible outside any single chat or session.
+              </p>
+            </article>
+            <article class="workflow-step">
+              <span class="step-index">02</span>
+              <h3>Scan the real project</h3>
+              <p>
+                Analyze a real repository into staged artifacts that separate observed facts,
+                inference, uncertainty, and execution readiness.
+              </p>
+            </article>
+            <article class="workflow-step">
+              <span class="step-index">03</span>
+              <h3>Review AI proposals with context</h3>
+              <p>
+                Let AI suggest updates, but keep canonical mutation review-driven so state stays
+                explicit and durable.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="capabilities" class="content-section section-capabilities">
+          <div class="section-heading">
+            <p class="eyebrow">Core Capabilities</p>
+            <h2>Built around the current MVP, not future promises.</h2>
+          </div>
+
+          <div class="capability-grid">
+            <article class="capability-card">
+              <h3>Canonical workspace</h3>
+              <p>
+                Keep project structure, task state, and context rooted in a deterministic
+                `.treema` workspace contract.
+              </p>
+            </article>
+            <article class="capability-card">
+              <h3>Project Scan</h3>
+              <p>
+                Generate staged inventory, analysis, architecture, and execution artifacts from
+                a real project folder with validator-gated outputs.
+              </p>
+            </article>
+            <article class="capability-card">
+              <h3>Human-reviewed AI updates</h3>
+              <p>
+                Review proposal diffs before any canonical change so AI remains an assistant,
+                not the source of truth.
+              </p>
+            </article>
+            <article class="capability-card">
+              <h3>Durable project history</h3>
+              <p>
+                Preserve decisions, risk movement, and narrow focus updates in a workspace that
+                survives across sessions and tooling changes.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section section-evidence" aria-labelledby="evidence-title">
+          <div class="section-heading">
+            <p class="eyebrow">Screens</p>
+            <h2 id="evidence-title">The product already has real surfaces.</h2>
+            <p>
+              These placeholders reserve the slots for product captures based on the existing app
+              views. Replace them with real exports without changing layout or asset paths.
+            </p>
+          </div>
+
+          <div class="evidence-grid">
+            <figure class="evidence-card">
+              <img src="./assets/landing/structure-view.svg" alt="Placeholder for the TreeMA structure view" />
+              <figcaption>
+                <strong>Structure</strong>
+                <span>Project hierarchy, tracks, and count summaries.</span>
+              </figcaption>
+            </figure>
+            <figure class="evidence-card evidence-card-wide">
+              <img src="./assets/landing/scan-view.svg" alt="Placeholder for the TreeMA project scan view" />
+              <figcaption>
+                <strong>Project Scan</strong>
+                <span>Hierarchy, dependency, validator status, and execution roadmap.</span>
+              </figcaption>
+            </figure>
+            <figure class="evidence-card">
+              <img src="./assets/landing/review-view.svg" alt="Placeholder for the TreeMA AI review view" />
+              <figcaption>
+                <strong>AI Review</strong>
+                <span>Proposal summary with review-driven change inspection.</span>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section class="content-section section-rationale">
+          <div class="section-heading">
+            <p class="eyebrow">Why Explicit State Matters</p>
+            <h2>Explicit structure beats invisible context debt.</h2>
+          </div>
+
+          <div class="rationale-layout">
+            <article class="rationale-panel">
+              <h3>What stays visible</h3>
+              <ul>
+                <li>Current project shape, not just current conversation</li>
+                <li>Risks and decisions separated from tasks</li>
+                <li>Observed facts separated from inference and uncertainty</li>
+                <li>Execution readiness gated by validator status</li>
+              </ul>
+            </article>
+            <article class="rationale-quote">
+              <p>
+                TreeMA is not trying to be a full PM suite. It exists to keep project state
+                inspectable enough that humans and AI can operate on the same durable frame.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="status" class="content-section section-status">
+          <div class="section-heading">
+            <p class="eyebrow">Product Status</p>
+            <h2>An early product with a narrow, working contract.</h2>
+            <p>
+              TreeMA is in MVP shape. The current surface is intentionally focused on local
+              workflows, explicit workspace files, and reviewable AI assistance.
+            </p>
+          </div>
+
+          <div class="status-grid">
+            <article class="status-card">
+              <h3>Available now</h3>
+              <ul>
+                <li>Local app server and Electron shell</li>
+                <li>Workspace init, load, snapshot, and export flows</li>
+                <li>Project Scan and Quick Scan analysis surfaces</li>
+                <li>Read-only AI proposal review</li>
+              </ul>
+            </article>
+            <article class="status-card">
+              <h3>Deliberately not here yet</h3>
+              <ul>
+                <li>Autonomous writes to canonical state</li>
+                <li>Real-time collaboration and team permissions</li>
+                <li>Workflow automation beyond the narrow MVP loop</li>
+                <li>PM-suite breadth like chat, estimation, or sprint tooling</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="run-locally" class="content-section section-run">
+          <div class="section-heading">
+            <p class="eyebrow">Run Locally</p>
+            <h2>Open the existing product, not a mock.</h2>
+            <p>
+              TreeMA already runs as a local browser app and Electron desktop shell. Start with
+              the browser flow, then move into desktop if you want the same UI with native folder
+              access and IPC-backed actions.
+            </p>
+          </div>
+
+          <div class="run-grid">
+            <article class="run-card">
+              <h3>Browser app</h3>
+              <pre><code>npm run serve</code></pre>
+              <p>Then open <a href="http://localhost:4173">http://localhost:4173</a>.</p>
+            </article>
+            <article class="run-card">
+              <h3>Desktop shell</h3>
+              <pre><code>npm install
+npm run desktop</code></pre>
+              <p>The Electron shell loads the same app surface from the local repository.</p>
+            </article>
+            <article class="run-card">
+              <h3>Workspace CLI</h3>
+              <pre><code>npm run treema -- init /path/to/project "My Project"
+npm run treema -- analyze /path/to/project</code></pre>
+              <p>Initialize a `.treema` workspace and scan a real project into staged artifacts.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-section section-cta">
+          <div class="cta-panel">
+            <p class="eyebrow">Next Step</p>
+            <h2>Read the product shape, then open the real app.</h2>
+            <p>
+              Start with the overview if you want the full repository context. Jump into the app
+              if you already want to inspect the workspace, scan surface, and review flow.
+            </p>
+            <div class="hero-actions">
+              <a class="button" href="./README.md">Read the Overview</a>
+              <a class="button button-secondary" href="./index.html">Open the App</a>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

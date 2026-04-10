@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/project_state.schema.json",
+  "title": "TreeMA Project State",
+  "type": "object",
+  "required": ["meta", "projects", "tracks", "tasks", "decisions", "risks"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["schemaVersion", "projectName", "createdAt", "updatedAt"],
+      "additionalProperties": true,
+      "properties": {
+        "schemaVersion": {
+          "type": "string"
+        },
+        "projectName": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastApprovedUpdateAt": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "currentFocusTrackIds": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "currentFocusTaskIds": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/project"
+      }
+    },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/track"
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/task"
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/decision"
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/risk"
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "isoDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "projectStatus": {
+      "type": "string",
+      "enum": ["active", "paused", "archived"]
+    },
+    "trackStatus": {
+      "type": "string",
+      "enum": ["active", "paused", "archived"]
+    },
+    "taskStatus": {
+      "type": "string",
+      "enum": ["backlog", "ready", "in_progress", "blocked", "done"]
+    },
+    "decisionStatus": {
+      "type": "string",
+      "enum": ["proposed", "accepted", "rejected", "superseded"]
+    },
+    "riskStatus": {
+      "type": "string",
+      "enum": ["open", "monitoring", "mitigated", "realized", "closed"]
+    },
+    "riskSeverity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "stringArray": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "status"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/projectStatus"
+        },
+        "parentId": {
+          "type": ["string", "null"]
+        },
+        "trackIds": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "tags": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
+    },
+    "track": {
+      "type": "object",
+      "required": ["id", "projectId", "name", "status"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "projectId": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/trackStatus"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "required": ["id", "projectId", "title", "status", "updatedAt"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "projectId": {
+          "$ref": "#/$defs/id"
+        },
+        "trackId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/taskStatus"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "assignee": {
+          "type": "string"
+        },
+        "dependsOn": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "blockedBy": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "dueAt": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/isoDateTime"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["id", "projectId", "title", "status", "updatedAt"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "projectId": {
+          "$ref": "#/$defs/id"
+        },
+        "trackId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "impact": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/decisionStatus"
+        },
+        "relatedTaskIds": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "relatedRiskIds": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/isoDateTime"
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "required": ["id", "projectId", "title", "status", "severity", "updatedAt"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "projectId": {
+          "$ref": "#/$defs/id"
+        },
+        "trackId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "mitigation": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/riskStatus"
+        },
+        "severity": {
+          "$ref": "#/$defs/riskSeverity"
+        },
+        "relatedTaskIds": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/isoDateTime"
+        }
+      }
+    }
+  }
+}

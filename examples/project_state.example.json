@@ -1,0 +1,316 @@
+{
+  "meta": {
+    "schemaVersion": "0.1.0",
+    "projectName": "TreeMA Sample Workspace",
+    "createdAt": "2026-04-09T00:00:00Z",
+    "updatedAt": "2026-04-09T00:00:00Z",
+    "lastApprovedUpdateAt": null,
+    "currentFocusTrackIds": [
+      "track:phase1",
+      "track:alias-builder",
+      "track:core-stability"
+    ],
+    "currentFocusTaskIds": [
+      "task:a-bucket-join-coverage",
+      "task:alias-design",
+      "task:core-watch"
+    ]
+  },
+  "projects": [
+    {
+      "id": "project:kojp",
+      "name": "Sample Workspace",
+      "description": "Sample umbrella project for pipeline, phase work, and AI-assisted tasks.",
+      "status": "active",
+      "parentId": null,
+      "trackIds": [
+        "track:core-pipeline",
+        "track:phase1",
+        "track:alias-builder",
+        "track:core-stability"
+      ],
+      "tags": [
+        "operations",
+        "dashboard"
+      ]
+    },
+    {
+      "id": "project:core",
+      "name": "Core Pipeline",
+      "description": "Production pipeline operations and validation flow.",
+      "status": "active",
+      "parentId": "project:kojp",
+      "trackIds": [
+        "track:core-pipeline",
+        "track:core-stability"
+      ],
+      "tags": [
+        "production"
+      ]
+    },
+    {
+      "id": "project:phase1",
+      "name": "Phase 1 Improvements",
+      "description": "A bucket join coverage and D stage generation work.",
+      "status": "active",
+      "parentId": "project:kojp",
+      "trackIds": [
+        "track:phase1"
+      ],
+      "tags": [
+        "improvement"
+      ]
+    },
+    {
+      "id": "project:alias",
+      "name": "AI Alias Builder",
+      "description": "Candidate generation, review, and approved mapping workflow.",
+      "status": "active",
+      "parentId": "project:kojp",
+      "trackIds": [
+        "track:alias-builder"
+      ],
+      "tags": [
+        "ai"
+      ]
+    },
+    {
+      "id": "project:future",
+      "name": "Future",
+      "description": "Deferred tracks not in the current focus window.",
+      "status": "paused",
+      "parentId": "project:kojp",
+      "trackIds": [],
+      "tags": [
+        "parking-lot"
+      ]
+    }
+  ],
+  "tracks": [
+    {
+      "id": "track:core-pipeline",
+      "projectId": "project:core",
+      "name": "Core Pipeline",
+      "status": "active",
+      "goal": "Keep populate-stage, refresh-prod, and validate stable in production.",
+      "owner": "operator"
+    },
+    {
+      "id": "track:phase1",
+      "projectId": "project:phase1",
+      "name": "Phase 1",
+      "status": "active",
+      "goal": "Increase safe coverage for A and D without harming precision.",
+      "owner": "operator"
+    },
+    {
+      "id": "track:alias-builder",
+      "projectId": "project:alias",
+      "name": "AI Alias Builder",
+      "status": "active",
+      "goal": "Design the candidate generation, review, and approved mapping loop.",
+      "owner": "operator"
+    },
+    {
+      "id": "track:core-stability",
+      "projectId": "project:core",
+      "name": "Core Stability",
+      "status": "active",
+      "goal": "Touch production behavior minimally while Phase 1 and AI tracks advance.",
+      "owner": "operator"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task:d-bucket-instrumentation",
+      "projectId": "project:phase1",
+      "trackId": "track:phase1",
+      "title": "D bucket instrumentation",
+      "description": "Instrument D bucket generation so failure shape and stage coverage are visible.",
+      "status": "done",
+      "priority": "high",
+      "assignee": "operator",
+      "dependsOn": [],
+      "blockedBy": [],
+      "dueAt": null,
+      "updatedAt": "2026-04-09T00:00:00Z"
+    },
+    {
+      "id": "task:a-bucket-join-coverage",
+      "projectId": "project:phase1",
+      "trackId": "track:phase1",
+      "title": "A bucket analysis",
+      "description": "Identify safe join-coverage extensions for Phase 1A and confirm why they are worth doing.",
+      "status": "in_progress",
+      "priority": "high",
+      "assignee": "operator",
+      "dependsOn": [],
+      "blockedBy": [],
+      "dueAt": null,
+      "updatedAt": "2026-04-09T00:00:00Z"
+    },
+    {
+      "id": "task:alias-design",
+      "projectId": "project:alias",
+      "trackId": "track:alias-builder",
+      "title": "Gemini alias prototype",
+      "description": "Define how candidate generation, review, and approved mapping should be separated.",
+      "status": "ready",
+      "priority": "high",
+      "assignee": "operator",
+      "dependsOn": [],
+      "blockedBy": [],
+      "dueAt": null,
+      "updatedAt": "2026-04-09T00:00:00Z"
+    },
+    {
+      "id": "task:approved-mapping-store",
+      "projectId": "project:alias",
+      "trackId": "track:alias-builder",
+      "title": "Approved mapping store",
+      "description": "Choose the deterministic storage format for reviewed alias mappings.",
+      "status": "backlog",
+      "priority": "medium",
+      "assignee": "operator",
+      "dependsOn": [
+        "task:alias-design"
+      ],
+      "blockedBy": [],
+      "dueAt": null,
+      "updatedAt": "2026-04-09T00:00:00Z"
+    },
+    {
+      "id": "task:core-watch",
+      "projectId": "project:core",
+      "trackId": "track:core-stability",
+      "title": "Core stability watch",
+      "description": "Keep production touch minimal while other tracks move.",
+      "status": "ready",
+      "priority": "high",
+      "assignee": "operator",
+      "dependsOn": [],
+      "blockedBy": [],
+      "dueAt": null,
+      "updatedAt": "2026-04-09T00:00:00Z"
+    },
+    {
+      "id": "task:refresh-prod-validate",
+      "projectId": "project:core",
+      "trackId": "track:core-pipeline",
+      "title": "Refresh prod validation",
+      "description": "Run a lightweight production validation pass after Phase 1 changes land.",
+      "status": "blocked",
+      "priority": "high",
+      "assignee": "operator",
+      "dependsOn": [],
+      "blockedBy": [
+        "task:a-bucket-join-coverage"
+      ],
+      "dueAt": null,
+      "updatedAt": "2026-04-09T00:00:00Z"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision:remove-salvage",
+      "projectId": "project:phase1",
+      "trackId": "track:phase1",
+      "title": "Remove salvage",
+      "summary": "Salvage path was removed after confirming it was effectively unreachable.",
+      "rationale": "Keeping unreachable recovery logic increases complexity without improving coverage.",
+      "impact": "Pipeline logic is simpler and Phase 1 coverage remains unchanged.",
+      "status": "accepted",
+      "relatedTaskIds": [
+        "task:d-bucket-instrumentation"
+      ],
+      "relatedRiskIds": [
+        "risk:precision-regression"
+      ],
+      "updatedAt": "2026-04-09T00:00:00Z"
+    },
+    {
+      "id": "decision:no-phase1b",
+      "projectId": "project:phase1",
+      "trackId": "track:phase1",
+      "title": "No Phase1B rule",
+      "summary": "Do not introduce a Phase1B rule without a safe precision-preserving pattern.",
+      "rationale": "Unsafe heuristics would produce noisy mappings and reduce trust.",
+      "impact": "Scope stays on Phase 1A and D until a safe rule exists.",
+      "status": "accepted",
+      "relatedTaskIds": [
+        "task:a-bucket-join-coverage"
+      ],
+      "relatedRiskIds": [
+        "risk:precision-regression"
+      ],
+      "updatedAt": "2026-04-08T14:00:00Z"
+    },
+    {
+      "id": "decision:ai-human-review",
+      "projectId": "project:alias",
+      "trackId": "track:alias-builder",
+      "title": "AI alias outputs require review before approval",
+      "summary": "Candidate generation is AI-assisted, but approved mappings remain deterministic and reviewed.",
+      "rationale": "This keeps recall gains without surrendering precision control.",
+      "impact": "Alias builder is designed as generate-review-approve, not autonomous mutation.",
+      "status": "accepted",
+      "relatedTaskIds": [
+        "task:alias-design",
+        "task:approved-mapping-store"
+      ],
+      "relatedRiskIds": [
+        "risk:review-throughput"
+      ],
+      "updatedAt": "2026-04-08T08:00:00Z"
+    }
+  ],
+  "risks": [
+    {
+      "id": "risk:precision-regression",
+      "projectId": "project:phase1",
+      "trackId": "track:phase1",
+      "title": "Phase 1 rule expansion may reduce precision",
+      "description": "Join coverage gains can backfire if they are not anchored in safe patterns.",
+      "mitigation": "Record the exact reason for each rule and reject anything that cannot preserve precision.",
+      "trigger": "A shortcut heuristic is proposed without a defensible error bound.",
+      "status": "open",
+      "severity": "high",
+      "relatedTaskIds": [
+        "task:a-bucket-join-coverage"
+      ],
+      "updatedAt": "2026-04-09T00:00:00Z"
+    },
+    {
+      "id": "risk:review-throughput",
+      "projectId": "project:alias",
+      "trackId": "track:alias-builder",
+      "title": "Alias review queue may grow faster than approvals",
+      "description": "Candidate generation can outpace human review if the review unit is too coarse.",
+      "mitigation": "Keep review batches small and store only approved mappings in the deterministic layer.",
+      "trigger": "More than one review batch remains pending across two sessions.",
+      "status": "monitoring",
+      "severity": "medium",
+      "relatedTaskIds": [
+        "task:alias-design",
+        "task:approved-mapping-store"
+      ],
+      "updatedAt": "2026-04-08T12:00:00Z"
+    },
+    {
+      "id": "risk:core-instability",
+      "projectId": "project:core",
+      "trackId": "track:core-stability",
+      "title": "Core pipeline may receive too many incidental touches",
+      "description": "Frequent cross-track edits in production code raise regression risk.",
+      "mitigation": "Limit active tracks to three and route most new work into backlog until current focus clears.",
+      "trigger": "An unrelated feature requests production edits during active Phase 1 work.",
+      "status": "open",
+      "severity": "high",
+      "relatedTaskIds": [
+        "task:core-watch",
+        "task:refresh-prod-validate"
+      ],
+      "updatedAt": "2026-04-08T10:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treema.local/schemas/analysis/architecture/validation_report.schema.json",
+  "title": "TreeMA Validation Report",
+  "allOf": [
+    { "$ref": "../artifact-metadata.schema.json" },
+    {
+      "type": "object",
+      "required": ["summary", "findings"],
+      "properties": {
+        "summary": {
+          "type": "object",
+          "required": ["status", "blockingCount", "nonBlockingCount"],
+          "properties": {
+            "status": { "type": "string", "enum": ["ready", "blocked", "unavailable"] },
+            "blockingCount": { "type": "integer", "minimum": 0 },
+            "nonBlockingCount": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "findings": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  ]
+}
