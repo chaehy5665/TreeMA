@@ -39,6 +39,7 @@ This repository starts from the deterministic core, not from automation-heavy be
 - `landing.html`: public-facing landing page for product positioning and local run entry
 - `landing.css`: landing page styling and responsive editorial layout
 - `privacy.html`: public-facing privacy policy for the website and current MVP distribution
+- `support.html`: public-facing customer support page for the website and current MVP distribution
 - `terms.html`: public-facing terms of service for the website and current MVP distribution
 - `legal.css`: shared styling for legal pages
 - `vercel.json`: Vercel routing config that enables extensionless public URLs and redirects the deployed root to the landing page
@@ -74,10 +75,11 @@ Public landing:
 
 - [http://localhost:4173/landing.html](http://localhost:4173/landing.html): product overview, MVP positioning, and local run guide
 - [http://localhost:4173/privacy.html](http://localhost:4173/privacy.html): privacy policy
+- [http://localhost:4173/support.html](http://localhost:4173/support.html): customer support
 - [http://localhost:4173/terms.html](http://localhost:4173/terms.html): terms of service
 - [README.md](README.md): repository overview and local workflow details
 - Vercel deployment root `/`: redirects to `/landing`
-- Vercel public legal paths: `/privacy` and `/terms` map to `privacy.html` and `terms.html` via `cleanUrls`
+- Vercel public support and legal paths: `/support`, `/privacy`, and `/terms` map to their `.html` files via `cleanUrls`
 
 `serve` now starts the Treema local app server, not a static file server. The UI can:
 

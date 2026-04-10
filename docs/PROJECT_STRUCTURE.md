@@ -38,6 +38,7 @@ Provide an implementation-centered map of the current repository and its main mo
 - `landing.css`: landing-specific visual system, responsive layout, and reduced-motion behavior
 - `src/landing.js`: lightweight reveal and section-highlight behavior for the public landing page
 - `privacy.html`: public-facing privacy policy page for the TreeMA MVP surface
+- `support.html`: public-facing customer support page for the TreeMA MVP surface
 - `terms.html`: public-facing terms of service page for the TreeMA MVP surface
 - `legal.css`: shared legal-page styling for public policy documents
 - `vercel.json`: deployment-time config that enables extensionless public URLs and redirects `/` to the landing page on Vercel
@@ -99,6 +100,7 @@ TreeMA/
 ├── landing.html
 ├── privacy.html
 ├── styles.css
+├── support.html
 ├── terms.html
 ├── vercel.json
 ├── package.json
