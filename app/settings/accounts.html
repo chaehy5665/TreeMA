@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TreeMA Account Settings</title>
+    <link rel="stylesheet" href="/app/app.css" />
+  </head>
+  <body data-app-page="settings-accounts">
+    <main class="app-shell">
+      <header class="app-header">
+        <span class="app-kicker">Settings</span>
+        <h1>Account connections live on app.treesma.com</h1>
+        <p>Use this hosted surface for account-level connection and session UX. Desktop remains the local-first runtime for workspace and analysis operations.</p>
+      </header>
+
+      <section class="app-grid">
+        <article class="app-card">
+          <h2>GitHub OAuth</h2>
+          <p>Start a hosted GitHub account connection flow. The public callback enters through `treesma.com/auth/github/callback` and returns here for web targets.</p>
+          <div class="app-status-panel" data-web-github-status>
+            <strong>Not connected yet.</strong>
+            <p>The hosted web surface stores the current GitHub OAuth token in this browser until a server-backed account system exists.</p>
+          </div>
+          <div class="app-actions">
+            <a class="app-button app-button-primary" href="/api/auth/github/start?target=web&returnPath=%2Fsettings%2Faccounts">
+              Continue with GitHub
+            </a>
+            <button class="app-button app-button-secondary" type="button" data-web-github-disconnect>
+              Disconnect web token
+            </button>
+          </div>
+        </article>
+
+        <article class="app-card">
+          <h2>Desktop-only capabilities</h2>
+          <p>Workspace initialization, filesystem access, project analysis, and local provider-secret storage stay in TreeMA Desktop.</p>
+          <div class="app-actions">
+            <a class="app-button app-button-secondary" href="/settings/download">Open desktop setup</a>
+          </div>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="/app/app.js"></script>
+  </body>
+</html>

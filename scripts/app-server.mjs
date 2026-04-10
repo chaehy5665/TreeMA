@@ -9,8 +9,16 @@ import { fileURLToPath } from "node:url";
 
 import { analyzeProject, persistProjectAnalysis } from "./lib/project-analysis.mjs";
 import {
+  buildGitHubOAuthCallbackRuntime,
+  buildGitHubOAuthCallbackUrl,
+  connectGitHubOAuthToken,
+  createGitHubOAuthConnectedReceipt,
   disconnectAccountSettings,
+  exchangeGitHubOAuthCode,
+  GITHUB_OAUTH_CALLBACK_PATH,
   loadAccountSettings,
+  recordGitHubOAuthCallback,
+  renderGitHubOAuthCallbackPage,
   saveAccountSettings,
   testAccountSettings
 } from "./lib/account-settings.mjs";
@@ -34,6 +42,11 @@ const MIME_TYPES = {
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(payload));
+}
+
+function sendHtml(response, statusCode, html) {
+  response.writeHead(statusCode, { "Content-Type": "text/html; charset=utf-8" });
+  response.end(html);
 }
 
 async function readBody(request) {
@@ -180,7 +193,9 @@ async function serveStatic(request, response, pathname) {
 async function handleApi(request, response, url) {
   try {
     if (request.method === "GET" && url.pathname === "/api/settings/accounts") {
-      const settings = await loadAccountSettings();
+      const settings = await loadAccountSettings({
+        githubOAuth: buildGitHubOAuthCallbackRuntime(buildGitHubOAuthCallbackUrl(`http://127.0.0.1:${port}`))
+      });
       sendJson(response, 200, settings);
       return;
     }
@@ -305,10 +320,71 @@ async function handleApi(request, response, url) {
   }
 }
 
+async function handleGitHubOAuthCallback(response, url) {
+  const callbackUrl = buildGitHubOAuthCallbackUrl(`http://127.0.0.1:${port}`);
+  const params = {
+    code: url.searchParams.get("code") || "",
+    state: url.searchParams.get("state") || "",
+    error: url.searchParams.get("error") || "",
+    error_description: url.searchParams.get("error_description") || ""
+  };
+  let oauth;
+
+  if (!params.error && params.code) {
+    try {
+      const exchanged = await exchangeGitHubOAuthCode(
+        {
+          code: params.code,
+          redirectUri: callbackUrl
+        },
+        {
+          callbackUrl
+        }
+      );
+      const connected = await connectGitHubOAuthToken(
+        {
+          accessToken: exchanged.accessToken,
+          oauthReceipt: createGitHubOAuthConnectedReceipt({
+            state: params.state,
+            message: "GitHub token was exchanged and stored on the local runtime."
+          })
+        },
+        {
+          githubOAuth: buildGitHubOAuthCallbackRuntime(callbackUrl)
+        }
+      );
+      oauth = connected.settings.providers.githubCopilot.oauth;
+    } catch (error) {
+      oauth = await recordGitHubOAuthCallback(
+        {
+          ...params,
+          error: "token_exchange_failed",
+          error_description: error.message || "GitHub token exchange failed."
+        },
+        {
+          githubOAuth: buildGitHubOAuthCallbackRuntime(callbackUrl)
+        }
+      );
+    }
+  } else {
+    oauth = await recordGitHubOAuthCallback(params, {
+      githubOAuth: buildGitHubOAuthCallbackRuntime(callbackUrl)
+    });
+  }
+
+  const html = renderGitHubOAuthCallbackPage(oauth.lastCallback, callbackUrl);
+  sendHtml(response, oauth.lastCallback?.status === "success" ? 200 : 400, html);
+}
+
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host || `127.0.0.1:${port}`}`);
   if (url.pathname.startsWith("/api/")) {
     await handleApi(request, response, url);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === GITHUB_OAUTH_CALLBACK_PATH) {
+    await handleGitHubOAuthCallback(response, url);
     return;
   }
 

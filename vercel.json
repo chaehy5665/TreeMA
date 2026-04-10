@@ -1,9 +1,72 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.treesma.com"
+        }
+      ],
+      "destination": "/app"
+    },
+    {
+      "source": "/auth/complete",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.treesma.com"
+        }
+      ],
+      "destination": "/app/auth/complete"
+    },
+    {
+      "source": "/settings/accounts",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.treesma.com"
+        }
+      ],
+      "destination": "/app/settings/accounts"
+    },
+    {
+      "source": "/settings/download",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.treesma.com"
+        }
+      ],
+      "destination": "/app/settings/download"
+    },
+    {
+      "source": "/auth/github/callback",
+      "destination": "/api/auth/github/callback"
+    }
+  ],
   "redirects": [
     {
       "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "treesma.com"
+        }
+      ],
+      "destination": "/landing",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.treesma.com"
+        }
+      ],
       "destination": "/landing",
       "permanent": false
     }

@@ -37,12 +37,15 @@ This repository starts from the deterministic core, not from automation-heavy be
 - `schemas/project_structure.schema.json`: JSON Schema for the analysis root manifest
 - `index.html`: dependency-free MVP interface
 - `landing.html`: public-facing landing page for product positioning and local run entry
+- `app/`: hosted `app.treesma.com` control-plane pages for auth completion, account settings, and desktop handoff guidance
 - `landing.css`: landing page styling and responsive editorial layout
 - `privacy.html`: public-facing privacy policy for the website and current MVP distribution
 - `support.html`: public-facing customer support page for the website and current MVP distribution
 - `terms.html`: public-facing terms of service for the website and current MVP distribution
 - `legal.css`: shared styling for legal pages
 - `vercel.json`: Vercel routing config that enables extensionless public URLs and redirects the deployed root to the landing page
+- `api/auth/github/start.mjs`: Vercel-hosted GitHub OAuth starter for the hosted web app surface
+- `api/auth/github/callback.mjs`: Vercel-hosted GitHub OAuth callback function for the public `treesma.com` route
 - `electron/main.cjs`: Electron desktop shell and IPC handlers
 - `electron/preload.cjs`: safe renderer bridge for desktop runtime actions
 - `scripts/validate-state.mjs`: lightweight runtime validator
@@ -80,6 +83,9 @@ Public landing:
 - [README.md](README.md): repository overview and local workflow details
 - Vercel deployment root `/`: redirects to `/landing`
 - Vercel public support and legal paths: `/support`, `/privacy`, and `/terms` map to their `.html` files via `cleanUrls`
+- Vercel public GitHub OAuth start: `/api/auth/github/start`
+- Vercel public GitHub OAuth callback: `/auth/github/callback` rewrites to `/api/auth/github/callback`
+- `app.treesma.com`: host-based rewrites map `/`, `/auth/complete`, `/settings/accounts`, and `/settings/download` into `app/`
 
 `serve` now starts the Treema local app server, not a static file server. The UI can:
 
@@ -98,9 +104,18 @@ Desktop runtime:
 Settings now also includes local `AI Accounts` controls for:
 
 - `OpenAI`: start from ChatGPT Plus/Pro login, with API key, base URL, and default model as the manual fallback for direct API access
-- `GitHub Copilot`: start from the browser setup flow, with a supported GitHub user token as the manual fallback for direct verification
+- `GitHub Copilot`: exposes an Authorization callback URL for GitHub OAuth on the local runtime, with a supported GitHub user token as the manual fallback for direct verification
 
 These credentials are stored outside project workspaces in `~/.treema/settings/accounts.json`. They are never written into `.treema/`.
+GitHub OAuth callback receipts are also stored there in masked form, the hosted callback URL is `https://treesma.com/auth/github/callback`, hosted token exchange runs on `treesma.com`, and desktop handoff uses a local loopback POST plus `treesma://auth/complete?...` to focus the app after the token is stored.
+
+Hosted GitHub OAuth requires both a client ID and a client secret in the environments that perform token exchange:
+
+- Local development: copy [`.env.example`](.env.example) to `.env.local` and set `TREEMA_GITHUB_OAUTH_CLIENT_ID`
+- Local localhost callback exchange: also set `TREEMA_GITHUB_OAUTH_CLIENT_SECRET`
+- Vercel preview/production: add both `TREEMA_GITHUB_OAUTH_CLIENT_ID` and `TREEMA_GITHUB_OAUTH_CLIENT_SECRET` in the project environment variables before deploying
+- GitHub OAuth App callback URL: `https://treesma.com/auth/github/callback`
+- Hosted web app note: `app.treesma.com` currently stores the exchanged GitHub token in browser local storage until a server-backed account/session layer exists
 
 ## Validate
 

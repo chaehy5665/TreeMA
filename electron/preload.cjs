@@ -12,6 +12,9 @@ contextBridge.exposeInMainWorld("treemaDesktop", {
   loadAccountSettings() {
     return invoke("treema:settings:accounts:load");
   },
+  startGitHubOAuthFlow(values) {
+    return invoke("treema:settings:accounts:github-oauth:start", values);
+  },
   saveAccountSettings(provider, values) {
     return invoke("treema:settings:accounts:save", { provider, values });
   },
@@ -35,5 +38,15 @@ contextBridge.exposeInMainWorld("treemaDesktop", {
   },
   analyzeProject(projectPath, mode) {
     return invoke("treema:project:analyze", { projectPath, mode });
+  },
+  onOAuthComplete(callback) {
+    if (typeof callback !== "function") {
+      return () => {};
+    }
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on("treema:auth:oauth-complete", listener);
+    return () => {
+      ipcRenderer.removeListener("treema:auth:oauth-complete", listener);
+    };
   }
 });

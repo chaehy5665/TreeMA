@@ -101,13 +101,17 @@ const settingsOpenAiDisconnectEl = document.querySelector("#settings-openai-disc
 const settingsOpenAiStatusEl = document.querySelector("#settings-openai-status");
 const settingsGitHubCopilotBadgeEl = document.querySelector("#settings-github-copilot-badge");
 const settingsGitHubCopilotRegisterEl = document.querySelector("#settings-github-copilot-register");
+const settingsGitHubCopilotHostedCallbackUrlEl = document.querySelector("#settings-github-copilot-hosted-callback-url");
+const settingsGitHubCopilotCallbackUrlEl = document.querySelector("#settings-github-copilot-callback-url");
+const settingsGitHubCopilotCallbackNoteEl = document.querySelector("#settings-github-copilot-callback-note");
 const settingsGitHubCopilotTokenEl = document.querySelector("#settings-github-copilot-token");
 const settingsGitHubCopilotSaveEl = document.querySelector("#settings-github-copilot-save");
 const settingsGitHubCopilotTestEl = document.querySelector("#settings-github-copilot-test");
 const settingsGitHubCopilotDisconnectEl = document.querySelector("#settings-github-copilot-disconnect");
 const settingsGitHubCopilotStatusEl = document.querySelector("#settings-github-copilot-status");
 const OPENAI_LOGIN_URL = "https://chatgpt.com/auth/login";
-const GITHUB_COPILOT_SETUP_URL = "https://github.com/features/copilot";
+const DEFAULT_WEB_APP_ORIGIN = "https://app.treesma.com";
+const WEB_APP_ACCOUNTS_PATH = "/settings/accounts";
 const SETTINGS_SECTION_CONFIG = [
   {
     id: "general",
@@ -737,6 +741,54 @@ function buildAccountStatusMarkup(providerLabel, providerSettings, disconnectedC
   `;
 }
 
+function buildGitHubOAuthCallbackNote(oauthSettings) {
+  if (!oauthSettings?.available || !oauthSettings.callbackUrl) {
+    return "Start the local runtime for desktop handoff, and register the hosted URL in your GitHub OAuth app settings.";
+  }
+
+  const lastCallback = oauthSettings.lastCallback;
+  if (!lastCallback) {
+    return "Register the hosted URL in your GitHub OAuth app. After GitHub returns there, continue into the local browser app or desktop app to store the masked callback receipt.";
+  }
+
+  const parts = [
+    lastCallback.message || "",
+    lastCallback.codePreview ? `Code ${lastCallback.codePreview}.` : "",
+    lastCallback.statePreview ? `State ${lastCallback.statePreview}.` : "",
+    lastCallback.receivedAt ? `Received ${formatDate(lastCallback.receivedAt)}.` : ""
+  ].filter(Boolean);
+
+  return parts.join(" ");
+}
+
+function getGitHubWebAppOrigin() {
+  return accountSettings?.providers?.githubCopilot?.oauth?.webAppOrigin || DEFAULT_WEB_APP_ORIGIN;
+}
+
+function buildHostedWebAppUrl(pathname) {
+  return new URL(pathname, `${getGitHubWebAppOrigin()}/`).toString();
+}
+
+async function startGitHubOAuthConnection() {
+  if (!desktopBridge?.startGitHubOAuthFlow) {
+    await openExternalUrl(buildHostedWebAppUrl(WEB_APP_ACCOUNTS_PATH));
+    renderInlineAccountActionStatus(
+      settingsGitHubCopilotStatusEl,
+      "Opened app.treesma.com account settings. Continue the hosted GitHub connection flow there."
+    );
+    return;
+  }
+
+  const started = await desktopBridge.startGitHubOAuthFlow({
+    returnPath: WEB_APP_ACCOUNTS_PATH
+  });
+  await openExternalUrl(started.authorizeUrl);
+  renderInlineAccountActionStatus(
+    settingsGitHubCopilotStatusEl,
+    "Opened GitHub OAuth in your browser. After authorization, treesma.com will hand the result back through the treesma:// desktop link."
+  );
+}
+
 function syncAccountSettingsControls() {
   if (!accountSettings) {
     settingsAccountStorageEl.textContent = "Loading local account settings...";
@@ -749,6 +801,7 @@ function syncAccountSettingsControls() {
   const openai = accountSettings.providers?.openai ?? {};
   const githubCopilot = accountSettings.providers?.githubCopilot ?? {};
   const semanticProviderConnected = hasSemanticScanProvider(accountSettings);
+  const githubOAuth = githubCopilot.oauth ?? {};
 
   settingsAccountStorageEl.textContent = `Stored outside the workspace at ${accountSettings.storagePath}`;
 
@@ -771,6 +824,12 @@ function syncAccountSettingsControls() {
     : "Project Scan requires a connected OpenAI or GitHub Copilot provider. Connect one in Settings or run Quick Scan.";
 
   settingsGitHubCopilotTokenEl.value = "";
+  settingsGitHubCopilotHostedCallbackUrlEl.value = githubOAuth.hostedCallbackUrl || "";
+  settingsGitHubCopilotCallbackUrlEl.value = githubOAuth.callbackUrl || "";
+  settingsGitHubCopilotCallbackUrlEl.placeholder = githubOAuth.available
+    ? githubOAuth.callbackUrl
+    : "Start the local app runtime to expose a callback URL.";
+  settingsGitHubCopilotCallbackNoteEl.textContent = buildGitHubOAuthCallbackNote(githubOAuth);
   settingsGitHubCopilotTokenEl.placeholder = githubCopilot.connected
     ? `Stored token ${githubCopilot.secretPreview}. Leave blank to keep it.`
     : "gho_, ghu_, or github_pat_";
@@ -1571,11 +1630,11 @@ async function runAccountProviderAction(provider, action) {
   renderInlineAccountActionStatus(statusEl, pendingMessage);
 
   try {
-    accountSettings = await apiFetch(pathname, {
+    await apiFetch(pathname, {
       method: "POST",
       body: JSON.stringify(payload)
     });
-    syncAccountSettingsControls();
+    await refreshAccountSettings();
   } catch (error) {
     renderInlineAccountActionStatus(statusEl, error.message, "error");
   } finally {
@@ -1667,11 +1726,7 @@ function bindInspectorControls() {
 
   settingsGitHubCopilotRegisterEl.addEventListener("click", async () => {
     try {
-      await openExternalUrl(GITHUB_COPILOT_SETUP_URL);
-      renderInlineAccountActionStatus(
-        settingsGitHubCopilotStatusEl,
-        "Opened GitHub Copilot in your browser. Finish sign-in or plan setup there, then return here if you want to save a token for direct verification."
-      );
+      await startGitHubOAuthConnection();
     } catch (error) {
       renderInlineAccountActionStatus(settingsGitHubCopilotStatusEl, error.message, "error");
     }
@@ -1956,6 +2011,16 @@ async function init() {
   bindImportExport();
   renderProjectAnalysis(currentAnalysis);
   setActiveTab(uiSettings.defaultTab);
+  if (desktopBridge?.onOAuthComplete) {
+    desktopBridge.onOAuthComplete(async (payload = {}) => {
+      await refreshAccountSettings();
+      renderInlineAccountActionStatus(
+        settingsGitHubCopilotStatusEl,
+        payload.completion?.message || "GitHub OAuth returned to the desktop app.",
+        payload.completion?.ok ? "ok" : "error"
+      );
+    });
+  }
   await refreshAccountSettings();
   await restoreLastWorkspace();
 }

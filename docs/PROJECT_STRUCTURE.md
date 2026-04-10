@@ -18,6 +18,7 @@ Provide an implementation-centered map of the current repository and its main mo
 ## Snapshot
 
 - Runtime style: browser UI plus Node-based local server, Electron desktop shell, and CLI
+- Hosted web style: `treesma.com` marketing surface plus `app.treesma.com` control-plane routes
 - External dependencies: `electron` in `devDependencies`
 - Frontend entry: `index.html` -> `src/main.js`
 - Public landing entry: `landing.html` -> `src/landing.js`
@@ -32,6 +33,12 @@ Provide an implementation-centered map of the current repository and its main mo
 ### UI surface
 
 - `index.html`: static shell and scan/workspace/review panels
+- `app/index.html`: hosted `app.treesma.com` entry page
+- `app/auth/complete.html`: hosted web auth completion surface
+- `app/settings/accounts.html`: hosted account-connection surface
+- `app/settings/download.html`: hosted desktop setup surface
+- `app/app.css`: hosted app visual system
+- `app/app.js`: hosted app query parsing and auth-complete behavior
 - `styles.css`: app styling, scan surface layout, and interactive inspector treatment
 - `src/main.js`: application controller, sidebar navigation, workspace actions, settings, staged analysis rendering, and scan inspector selection state
 - `landing.html`: public-facing landing page with product positioning and local run entry points
@@ -42,11 +49,13 @@ Provide an implementation-centered map of the current repository and its main mo
 - `terms.html`: public-facing terms of service page for the TreeMA MVP surface
 - `legal.css`: shared legal-page styling for public policy documents
 - `vercel.json`: deployment-time config that enables extensionless public URLs and redirects `/` to the landing page on Vercel
+- `api/auth/github/start.mjs`: Vercel-hosted GitHub OAuth starter for the hosted web and desktop surfaces, including PKCE cookie setup
+- `api/auth/github/callback.mjs`: Vercel-hosted public GitHub OAuth callback function for `treesma.com`, including token exchange and handoff
 
 ### Desktop shell
 
-- `electron/main.cjs`: Electron main process, IPC handlers for workspace plus analysis actions, and native folder picker integration
-- `electron/preload.cjs`: isolated renderer bridge exposed as `window.treemaDesktop`
+- `electron/main.cjs`: Electron main process, IPC handlers for workspace plus analysis actions, native folder picker integration, `treesma://` deep-link handling, desktop GitHub OAuth loopback callback listener, and local token-handoff bridge
+- `electron/preload.cjs`: isolated renderer bridge exposed as `window.treemaDesktop`, including desktop OAuth start and completion notifications
 
 ### Shared domain logic
 
@@ -56,14 +65,21 @@ Provide an implementation-centered map of the current repository and its main mo
 
 ### Server and CLI
 
-- `scripts/app-server.mjs`: static server plus `/api/workspace`, `/api/project/analyze`, `/api/settings/accounts`, and local mutation routes
+- `scripts/app-server.mjs`: static server plus `/api/workspace`, `/api/project/analyze`, `/api/settings/accounts`, local mutation routes, and the browser GitHub OAuth callback endpoint
 - `scripts/treema.mjs`: CLI for `init`, `snapshot`, and `analyze`
 - `scripts/validate-state.mjs`: CLI validation runner
 - `scripts/check-docs.mjs`: repo and workspace docs/schema contract validator
 
+### Hosted deployment routes
+
+- `api/auth/github/start.mjs`: Vercel function that creates hosted GitHub OAuth state, sets PKCE cookie state, and redirects to GitHub authorize
+- `api/auth/github/callback.mjs`: Vercel function that validates GitHub OAuth state, exchanges tokens, and routes to `app.treesma.com` or the desktop loopback bridge
+- `vercel.json`: host-based rewrites for `app.treesma.com`, plus the public hosted callback rewrite while keeping landing/legal clean URLs
+
 ### Workspace and analysis libraries
 
-- `scripts/lib/account-settings.mjs`: local AI account settings persistence and provider verification outside `.treema`
+- `scripts/lib/account-settings.mjs`: local AI account settings persistence, GitHub OAuth state/PKCE/token helpers, callback receipt storage, and provider verification outside `.treema`
+- `scripts/lib/env-loader.mjs`: repo-local `.env.local` and `.env` loader for local runtime entrypoints
 - `scripts/lib/treema-workspace.mjs`: template generation, workspace load, and snapshot persistence
 - `scripts/lib/project-analysis.mjs`: top-level staged analysis orchestrator and load/persist entrypoint
 - `scripts/lib/analysis/ai-client.mjs`: OpenAI-backed stage execution, caching, and JSON response handling for Project Scan
@@ -89,6 +105,20 @@ Provide an implementation-centered map of the current repository and its main mo
 TreeMA/
 ├── AGENTS.md
 ├── README.md
+├── api/
+│   └── auth/
+│       └── github/
+│           ├── start.mjs
+│           └── callback.mjs
+├── app/
+│   ├── app.css
+│   ├── app.js
+│   ├── auth/
+│   │   └── complete.html
+│   ├── index.html
+│   └── settings/
+│       ├── accounts.html
+│       └── download.html
 ├── assets/
 │   └── landing/
 ├── electron/

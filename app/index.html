@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TreeMA App</title>
+    <link rel="stylesheet" href="/app/app.css" />
+  </head>
+  <body data-app-page="home">
+    <main class="app-shell">
+      <header class="app-header">
+        <span class="app-kicker">TreeMA App</span>
+        <h1>Control plane for account connections and desktop handoff</h1>
+        <p>`app.treesma.com` is the authenticated web surface for account setup, OAuth completion, and desktop launch guidance. Local workspace and analysis remain in the desktop app.</p>
+      </header>
+
+      <section class="app-grid">
+        <article class="app-card">
+          <h2>Accounts</h2>
+          <p>Start provider connection flows and review which actions belong to the hosted control plane versus the local desktop runtime.</p>
+          <div class="app-actions">
+            <a class="app-button app-button-primary" href="/settings/accounts">Open account settings</a>
+          </div>
+        </article>
+
+        <article class="app-card">
+          <h2>Desktop</h2>
+          <p>Use TreeMA Desktop for workspace creation, local analysis, filesystem access, and local provider-secret storage.</p>
+          <div class="app-actions">
+            <a class="app-button app-button-secondary" href="/settings/download">Desktop setup</a>
+          </div>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="/app/app.js"></script>
+  </body>
+</html>

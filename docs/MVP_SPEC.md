@@ -61,6 +61,7 @@ The MVP should solve one operator's real project-state problem before adding bro
 - Project map with nested projects and tracks
 - Structured entities for tasks, decisions, and risks
 - Local `.treema` workspace initialization and loading
+- Hosted `app.treesma.com` control-plane pages for account settings, OAuth completion, and desktop setup guidance
 - AI-native Project Scan into Inventory, Analysis, Architecture, and Execution IR artifacts, plus deterministic Quick Scan inventory
 - Validator gate with blocking and non-blocking findings
 - JSON import/export
@@ -116,7 +117,7 @@ The MVP should solve one operator's real project-state problem before adding bro
 
 1. Open Settings
 2. Save local UI defaults for the current device
-3. Start OpenAI from ChatGPT Plus/Pro login, or use manual API credentials as fallback, and save GitHub Copilot credentials outside `.treema`
+3. Start OpenAI from ChatGPT Plus/Pro login, or use `app.treesma.com` plus the hosted GitHub OAuth callback and desktop handoff flow for account connection
 4. Verify provider connectivity without mutating workspace files
 
 ## Primary Screens

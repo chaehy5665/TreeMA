@@ -25,6 +25,8 @@ TreeMA runs in two supported local shells:
 
 Both shells use the same workspace and analysis modules, and both preserve the same `.treema` file contracts.
 
+The public `treesma.com` deployment is a Vercel-hosted static site with dedicated GitHub OAuth ingress routes. The hosted `app.treesma.com` deployment is a separate control-plane surface for account UX and auth completion.
+
 ## Subsystems
 
 ### UI
@@ -37,7 +39,7 @@ Both shells use the same workspace and analysis modules, and both preserve the s
 
 - `electron/main.cjs`
 - `electron/preload.cjs`
-- Responsibilities: create the desktop window, expose safe IPC handlers, use native folder selection, and reuse workspace and analysis modules without the HTTP layer
+- Responsibilities: create the desktop window, expose safe IPC handlers, use native folder selection, register the `treesma://` protocol, host a loopback GitHub OAuth callback plus desktop token-handoff listener, and reuse workspace and analysis modules without the main browser HTTP layer
 
 ### Shared domain logic
 
@@ -47,7 +49,19 @@ Both shells use the same workspace and analysis modules, and both preserve the s
 ### Local server
 
 - `scripts/app-server.mjs`
-- Responsibilities: serve static files, expose `/api/*`, bridge native directory selection, return loaded workspace payloads, and persist local AI account settings outside `.treema`
+- Responsibilities: serve static files, expose `/api/*`, host the browser-runtime GitHub OAuth callback route, bridge native directory selection, return loaded workspace payloads, and persist local AI account settings outside `.treema`
+
+### Hosted callback route
+
+- `api/auth/github/start.mjs`
+- `api/auth/github/callback.mjs`
+- `vercel.json`
+- Responsibilities: start hosted GitHub OAuth for web and desktop targets, set PKCE state cookies, exchange GitHub authorization codes for user tokens on the hosted callback, and route users into `app.treesma.com` or the desktop loopback plus `treesma://`
+
+### Hosted app surface
+
+- `app/`
+- Responsibilities: provide the first hosted `app.treesma.com` control-plane routes for `/auth/complete`, `/settings/accounts`, and `/settings/download`
 
 ### Workspace contract
 
@@ -63,7 +77,7 @@ Both shells use the same workspace and analysis modules, and both preserve the s
 ### Local account settings
 
 - `scripts/lib/account-settings.mjs`
-- Responsibilities: persist local provider credentials and verification metadata under `~/.treema/settings/accounts.json`, mask secrets before returning them to the UI, and keep credentials out of project workspaces
+- Responsibilities: persist local provider credentials plus masked GitHub OAuth callback receipts under `~/.treema/settings/accounts.json`, store exchanged desktop GitHub tokens locally, mask secrets before returning them to the UI, and keep credentials out of project workspaces
 
 ### CLI
 
@@ -102,12 +116,13 @@ Every non-trivial artifact produced by these stages includes:
 ## Data Flow
 
 1. A user opens the local app or CLI.
-2. The browser shell calls `/api/*` on the local server, or the Electron shell calls preload IPC handlers.
+2. The browser shell calls `/api/*` on the local server, or the Electron shell calls preload IPC handlers and listens for `treesma://` auth completion.
 3. The server, desktop shell, or CLI loads `.treema/project_state.json` and workspace markdown.
 4. The UI validates state and derives view models from canonical JSON.
 5. The analysis engine scans the real project and writes `.treema/analysis/project-structure.json` plus stage artifacts.
 6. Validator gate status determines whether execution artifacts are emitted.
 7. Snapshot actions update canonical state metadata and selected markdown context files.
+8. Hosted OAuth starts on `treesma.com` or `app.treesma.com`, completes on `treesma.com/auth/github/callback`, exchanges the code for a token using hosted secrets plus PKCE, then routes to `app.treesma.com/auth/complete` or the desktop loopback handoff before focusing `treesma://auth/complete`.
 
 ## Refactor Guardrails
 

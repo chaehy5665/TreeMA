@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TreeMA Auth Complete</title>
+    <link rel="stylesheet" href="/app/app.css" />
+  </head>
+  <body data-app-page="auth-complete">
+    <main class="app-shell">
+      <header class="app-header">
+        <span class="app-kicker">OAuth Complete</span>
+        <h1>GitHub returned to the TreeMA web app</h1>
+        <p>This page completes the hosted side of the GitHub OAuth flow. Web flows stay on `app.treesma.com`; desktop flows continue through `treesma://`.</p>
+      </header>
+
+      <section class="app-grid">
+        <article class="app-card">
+          <h2 data-auth-status>Waiting for OAuth result...</h2>
+          <ul data-auth-details></ul>
+          <p class="app-note" data-auth-storage-note hidden></p>
+          <div class="app-actions">
+            <a class="app-button app-button-primary" data-auth-next-link href="/settings/accounts">Continue</a>
+          </div>
+          <span class="app-code" data-auth-deep-link hidden></span>
+        </article>
+
+        <article class="app-card">
+          <h2>What this surface owns</h2>
+          <p>Hosted auth completion, account connection UX, and desktop handoff live here. Local workspace mutation and secret persistence stay in the desktop runtime.</p>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="/app/app.js"></script>
+  </body>
+</html>
