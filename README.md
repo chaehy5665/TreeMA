@@ -38,7 +38,10 @@ This repository starts from the deterministic core, not from automation-heavy be
 - `index.html`: dependency-free MVP interface
 - `landing.html`: public-facing landing page for product positioning and local run entry
 - `landing.css`: landing page styling and responsive editorial layout
-- `vercel.json`: Vercel routing config that redirects the deployed root to the landing page
+- `privacy.html`: public-facing privacy policy for the website and current MVP distribution
+- `terms.html`: public-facing terms of service for the website and current MVP distribution
+- `legal.css`: shared styling for legal pages
+- `vercel.json`: Vercel routing config that enables extensionless public URLs and redirects the deployed root to the landing page
 - `electron/main.cjs`: Electron desktop shell and IPC handlers
 - `electron/preload.cjs`: safe renderer bridge for desktop runtime actions
 - `scripts/validate-state.mjs`: lightweight runtime validator
@@ -70,8 +73,11 @@ Build a personal internal tool that makes project state legible and reviewable.
 Public landing:
 
 - [http://localhost:4173/landing.html](http://localhost:4173/landing.html): product overview, MVP positioning, and local run guide
+- [http://localhost:4173/privacy.html](http://localhost:4173/privacy.html): privacy policy
+- [http://localhost:4173/terms.html](http://localhost:4173/terms.html): terms of service
 - [README.md](README.md): repository overview and local workflow details
-- Vercel deployment root `/`: redirects to `landing.html` so the public site opens on the landing page
+- Vercel deployment root `/`: redirects to `/landing`
+- Vercel public legal paths: `/privacy` and `/terms` map to `privacy.html` and `terms.html` via `cleanUrls`
 
 `serve` now starts the Treema local app server, not a static file server. The UI can:
 

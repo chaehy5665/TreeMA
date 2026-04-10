@@ -1,4 +1,5 @@
 import { createReadStream } from "node:fs";
+import { access } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import http from "node:http";
 import path from "node:path";
@@ -51,6 +52,34 @@ function safePathname(pathname) {
     return null;
   }
   return resolved;
+}
+
+async function resolveStaticPath(pathname) {
+  const directPath = safePathname(pathname);
+  if (!directPath) {
+    return null;
+  }
+
+  try {
+    await access(directPath);
+    return directPath;
+  } catch {}
+
+  if (path.extname(directPath)) {
+    return directPath;
+  }
+
+  const htmlPath = safePathname(`${pathname}.html`);
+  if (!htmlPath) {
+    return directPath;
+  }
+
+  try {
+    await access(htmlPath);
+    return htmlPath;
+  } catch {
+    return directPath;
+  }
 }
 
 function isCanceledSelection(error) {
@@ -132,7 +161,7 @@ async function selectDirectoryWithDialog() {
 }
 
 async function serveStatic(request, response, pathname) {
-  const filePath = safePathname(pathname);
+  const filePath = await resolveStaticPath(pathname);
   if (!filePath) {
     sendJson(response, 403, { error: "Forbidden path" });
     return;
