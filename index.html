@@ -381,6 +381,19 @@
               <div class="settings-card settings-card-stack">
                 <p id="settings-account-storage" class="settings-account-storage muted"></p>
 
+                <label class="settings-row settings-row-select">
+                  <div class="settings-row-copy">
+                    <strong>Default analysis provider</strong>
+                    <p>Choose which connected provider Project Scan should prefer before any automatic fallback.</p>
+                  </div>
+                  <select id="settings-default-analysis-provider">
+                    <option value="auto">Auto</option>
+                    <option value="openai">OpenAI API</option>
+                    <option value="chatgpt-codex">ChatGPT Codex OAuth</option>
+                    <option value="github-copilot">GitHub Copilot</option>
+                  </select>
+                </label>
+
                 <article class="account-card">
                   <div class="account-card-head">
                     <div class="settings-row-copy">
@@ -456,6 +469,92 @@
                     </button>
 
                     <div id="settings-openai-status" class="settings-provider-status"></div>
+                  </div>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-card-head">
+                    <div class="settings-row-copy">
+                      <strong>ChatGPT Codex OAuth</strong>
+                      <p>Experimental personal-use provider for Project Scan. Hosted OAuth starts on `treesma.com` and returns through `app.treesma.com` or TreeMA Desktop.</p>
+                    </div>
+                    <span id="settings-chatgpt-codex-badge" class="pill status-backlog">Disconnected</span>
+                  </div>
+
+                  <div class="settings-form">
+                    <div class="settings-provider-primary">
+                      <button id="settings-chatgpt-codex-connect" type="button" class="action-button action-button-wide">
+                        Connect with ChatGPT Codex OAuth
+                      </button>
+                      <p class="settings-provider-note muted">
+                        Experimental and personal-use only. Do not use this provider for shared services, team automation, or proxy-style integrations.
+                      </p>
+                    </div>
+
+                    <div class="settings-provider-divider">
+                      <span>OAuth callback</span>
+                    </div>
+
+                    <label class="setting-stack">
+                      <span>Hosted authorization callback URL</span>
+                      <input
+                        id="settings-chatgpt-codex-hosted-callback-url"
+                        class="setting-input"
+                        type="text"
+                        readonly
+                        spellcheck="false"
+                        placeholder="https://treesma.com/auth/openai/callback"
+                      />
+                    </label>
+
+                    <label class="setting-stack">
+                      <span>Local desktop callback URL</span>
+                      <input
+                        id="settings-chatgpt-codex-callback-url"
+                        class="setting-input"
+                        type="text"
+                        readonly
+                        spellcheck="false"
+                        placeholder="Start TreeMA Desktop to expose a local callback URL."
+                      />
+                    </label>
+
+                    <p id="settings-chatgpt-codex-callback-note" class="settings-provider-note muted">
+                      Hosted OAuth completes on `treesma.com`, then hands control into `app.treesma.com` or back into the local desktop runtime.
+                    </p>
+
+                    <div class="settings-provider-divider">
+                      <span>Provider settings</span>
+                    </div>
+
+                    <label class="setting-stack">
+                      <span>Default model</span>
+                      <input
+                        id="settings-chatgpt-codex-model"
+                        class="setting-input"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="gpt-5.3-codex"
+                      />
+                    </label>
+
+                    <div class="action-row">
+                      <button id="settings-chatgpt-codex-save" type="button" class="action-button action-button-secondary">
+                        Save
+                      </button>
+                      <button id="settings-chatgpt-codex-test" type="button" class="action-button">Save + Test</button>
+                    </div>
+
+                    <button
+                      id="settings-chatgpt-codex-disconnect"
+                      type="button"
+                      class="action-button action-button-secondary action-button-wide"
+                    >
+                      Disconnect
+                    </button>
+
+                    <div id="settings-chatgpt-codex-status" class="settings-provider-status"></div>
                   </div>
                 </article>
 

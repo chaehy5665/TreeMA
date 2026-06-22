@@ -68,7 +68,7 @@ The MVP should solve one operator's real project-state problem before adding bro
 - Status board, structure map, timeline, and workspace-doc views
 - Project Scan views for hierarchy, dependency graph, critical flow, and execution roadmap
 - Read-only AI proposal review surface
-- Local AI account settings for provider credential storage and verification
+- Local AI account settings for provider credential storage, verification, and default analysis-provider selection
 - Lightweight validation for canonical state and docs/workspace contract
 
 ## Out Of Scope
@@ -117,8 +117,33 @@ The MVP should solve one operator's real project-state problem before adding bro
 
 1. Open Settings
 2. Save local UI defaults for the current device
-3. Start OpenAI from ChatGPT Plus/Pro login, or use `app.treesma.com` plus the hosted GitHub OAuth callback and desktop handoff flow for account connection
-4. Verify provider connectivity without mutating workspace files
+3. Choose the default analysis provider as `auto`, `openai`, `chatgpt-codex`, or `github-copilot`
+4. Start OpenAI from ChatGPT Plus/Pro login, use hosted GitHub OAuth, or use experimental hosted ChatGPT Codex OAuth with desktop handoff
+5. Persist provider credentials only in local settings under `~/.treema/settings/accounts.json`, never in project workspaces
+6. Verify provider connectivity without mutating workspace files
+
+### Provider settings state vocabulary
+
+The Settings UI and runtime use one shared readiness vocabulary for provider accounts:
+
+- `disconnected`: no saved credentials, and no active OAuth session
+- `saved`: credentials exist, but scan readiness has not been proven by a verification pass
+- `verified`: a verification pass succeeded and produced provider metadata, but scan readiness may still be blocked (for example, missing scopes, expired OAuth token)
+- `scan-ready`: `verified` and eligible for Project Scan
+- `needs-attention`: saved settings exist, but the provider is not `scan-ready`
+- `oauth-pending`: an OAuth flow was started and the local runtime is waiting for completion
+- `oauth-failed`: the last OAuth attempt failed and the failure details were recorded
+
+### Default analysis provider precedence
+
+The stored preference is `defaultAnalysisProvider`.
+
+- If `defaultAnalysisProvider="auto"`, Project Scan may fall back using the deterministic order `openai -> github-copilot -> chatgpt-codex` and selects the first `scan-ready` provider.
+- If `defaultAnalysisProvider` is explicitly set to `openai`, `github-copilot`, or `chatgpt-codex`, Project Scan must not silently fall back. If the selected provider is `disconnected` or not `scan-ready`, Project Scan is unavailable until the operator fixes it.
+
+### Verification sandbox rule
+
+Automated verification must not read or write the operator's real home directory settings. All agent-executed checks must set `TREEMA_SETTINGS_HOME` to a sandbox directory (for example, `$PWD/.sisyphus/tmp/provider-settings-home`) so account settings resolve under that sandbox instead of the real `~`.
 
 ## Primary Screens
 
@@ -127,6 +152,14 @@ The MVP should solve one operator's real project-state problem before adding bro
 - Timeline: recent decisions, risks, and workspace context
 - Project Scan: component hierarchy, dependency graph, critical flow, execution roadmap, and validator status
 - AI Review: proposal summary and per-change diff cards
+- Settings: provider cards for OpenAI API, experimental ChatGPT Codex OAuth, and GitHub Copilot plus default analysis-provider selection
+
+## Provider Boundaries
+
+- `OpenAI API` remains the default recommended semantic-scan path when a direct API key is available.
+- `GitHub Copilot` remains a supported semantic-scan path through GitHub-hosted models and OAuth or token-based verification.
+- `ChatGPT Codex OAuth` is an experimental personal-use provider for Project Scan only. It is not the canonical path for team automation, shared services, proxy deployments, or general chat UX.
+- `auto` keeps a deterministic fallback order of `openai -> github-copilot -> chatgpt-codex`. If the operator pins an explicit `defaultAnalysisProvider`, Project Scan does not silently switch to a different provider.
 
 ## MVP Acceptance Signals
 

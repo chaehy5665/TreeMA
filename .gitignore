@@ -4,3 +4,4 @@
 node_modules/
 .treema/
 test-results/
+.sisyphus/

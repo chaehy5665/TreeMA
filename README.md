@@ -103,11 +103,19 @@ Desktop runtime:
 
 Settings now also includes local `AI Accounts` controls for:
 
+- `Default analysis provider`: pin `auto`, `OpenAI`, `ChatGPT Codex OAuth`, or `GitHub Copilot` before Project Scan resolves a provider
 - `OpenAI`: start from ChatGPT Plus/Pro login, with API key, base URL, and default model as the manual fallback for direct API access
-- `GitHub Copilot`: exposes an Authorization callback URL for GitHub OAuth on the local runtime, with a supported GitHub user token as the manual fallback for direct verification
+- `ChatGPT Codex OAuth`: experimental personal-use Project Scan provider with hosted OpenAI OAuth start, hosted callback on `https://treesma.com/auth/openai/callback`, and desktop loopback handoff back into TreeMA
+- `GitHub Copilot`: exposes an Authorization callback URL for GitHub OAuth on the local runtime, with a supported GitHub user token as the manual fallback for direct verification and Project Scan model-access checks
 
-These credentials are stored outside project workspaces in `~/.treema/settings/accounts.json`. They are never written into `.treema/`.
+Provider selection is driven by the local setting `defaultAnalysisProvider`:
+
+- If `defaultAnalysisProvider="auto"`, Project Scan may fall back using the deterministic order `openai -> github-copilot -> chatgpt-codex` and selects the first `scan-ready` provider.
+- If `defaultAnalysisProvider` is explicitly set to `openai`, `github-copilot`, or `chatgpt-codex`, Project Scan must not silently fall back. If the selected provider is `disconnected` or not `scan-ready`, Project Scan is unavailable until the operator fixes it.
+
+These credentials are stored outside project workspaces in `~/.treema/settings/accounts.json` (or `${TREEMA_SETTINGS_HOME}/.treema/settings/accounts.json` when `TREEMA_SETTINGS_HOME` is set). They are never written into `.treema/`.
 GitHub OAuth callback receipts are also stored there in masked form, the hosted callback URL is `https://treesma.com/auth/github/callback`, hosted token exchange runs on `treesma.com`, and desktop handoff uses a local loopback POST plus `treesma://auth/complete?...` to focus the app after the token is stored.
+ChatGPT Codex OAuth callback receipts and tokens are stored there as well, with the same local-only storage rule and the same desktop loopback plus `treesma://auth/complete?...` handoff pattern.
 
 Hosted GitHub OAuth requires both a client ID and a client secret in the environments that perform token exchange:
 
@@ -115,13 +123,20 @@ Hosted GitHub OAuth requires both a client ID and a client secret in the environ
 - Local localhost callback exchange: also set `TREEMA_GITHUB_OAUTH_CLIENT_SECRET`
 - Vercel preview/production: add both `TREEMA_GITHUB_OAUTH_CLIENT_ID` and `TREEMA_GITHUB_OAUTH_CLIENT_SECRET` in the project environment variables before deploying
 - GitHub OAuth App callback URL: `https://treesma.com/auth/github/callback`
-- Hosted web app note: `app.treesma.com` currently stores the exchanged GitHub token in browser local storage until a server-backed account/session layer exists
+- Hosted web app note: `app.treesma.com` may store masked or tokenized completion payloads in browser local storage as a transitional fallback until a server-backed account/session layer exists
 
 ## Validate
 
 - `npm run validate`
 
 This checks the sample state with the lightweight runtime validator and verifies the repo/workspace docs contract.
+
+Verification rule: automated checks must set `TREEMA_SETTINGS_HOME` to a sandbox directory so validation does not read or write the operator's real `~/.treema/settings/accounts.json`.
+
+```bash
+TREEMA_SETTINGS_HOME="$PWD/.sisyphus/tmp/validate-home" npm run validate
+TREEMA_SETTINGS_HOME="$PWD/.sisyphus/tmp/validate-home" npm run validate:docs
+```
 
 ## Project Workspace
 

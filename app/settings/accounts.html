@@ -16,15 +16,32 @@
 
       <section class="app-grid">
         <article class="app-card">
-          <h2>GitHub OAuth</h2>
-          <p>Start a hosted GitHub account connection flow. The public callback enters through `treesma.com/auth/github/callback` and returns here for web targets.</p>
+          <h2><code>chatgpt-codex</code></h2>
+          <p>Start the hosted ChatGPT Codex connection flow. The hosted callback enters through `treesma.com/auth/openai/callback`; web targets return here, while desktop targets continue through the loopback + `treesma://` handoff back into TreeMA Desktop.</p>
+          <div class="app-status-panel" data-web-openai-status>
+            <strong>Not connected yet.</strong>
+            <p>The hosted web surface stores the current ChatGPT Codex OAuth token set in this browser only when it cannot hand the tokens back to a reachable local TreeMA runtime.</p>
+          </div>
+          <div class="app-actions">
+            <a class="app-button app-button-primary" href="/api/auth/openai/start?target=web&returnPath=%2Fsettings%2Faccounts">
+              Continue with ChatGPT Codex
+            </a>
+            <button class="app-button app-button-secondary" type="button" data-web-openai-disconnect>
+              Disconnect web token
+            </button>
+          </div>
+        </article>
+
+        <article class="app-card">
+          <h2><code>github-copilot</code></h2>
+          <p>Start the hosted GitHub Copilot connection flow. The hosted callback enters through `treesma.com/auth/github/callback`; web targets return here, while desktop targets finish on `treesma.com` before guiding the loopback + `treesma://` handoff back into TreeMA Desktop.</p>
           <div class="app-status-panel" data-web-github-status>
             <strong>Not connected yet.</strong>
             <p>The hosted web surface stores the current GitHub OAuth token in this browser until a server-backed account system exists.</p>
           </div>
           <div class="app-actions">
             <a class="app-button app-button-primary" href="/api/auth/github/start?target=web&returnPath=%2Fsettings%2Faccounts">
-              Continue with GitHub
+              Continue with GitHub Copilot
             </a>
             <button class="app-button app-button-secondary" type="button" data-web-github-disconnect>
               Disconnect web token
@@ -34,7 +51,7 @@
 
         <article class="app-card">
           <h2>Desktop-only capabilities</h2>
-          <p>Workspace initialization, filesystem access, project analysis, and local provider-secret storage stay in TreeMA Desktop.</p>
+          <p>Workspace initialization, filesystem access, project analysis, and local provider-secret storage stay in TreeMA Desktop. The hosted control plane only owns account settings, auth completion, and desktop setup guidance.</p>
           <div class="app-actions">
             <a class="app-button app-button-secondary" href="/settings/download">Open desktop setup</a>
           </div>

@@ -1,13 +1,12 @@
 import {
-  buildGitHubOAuthDesktopDeepLink,
-  buildGitHubOAuthWebCompleteUrl,
-  createGitHubOAuthReceipt,
-  decodeGitHubOAuthState,
-  decodeGitHubOAuthPkceSession,
-  exchangeGitHubOAuthCode,
-  fetchGitHubAuthenticatedUser,
-  GITHUB_OAUTH_CALLBACK_PATH
+  buildOpenAiOAuthDesktopDeepLink,
+  buildOpenAiOAuthWebCompleteUrl,
+  createOpenAiOAuthReceipt,
+  decodeOpenAiOAuthPkceSession,
+  decodeOpenAiOAuthState,
+  OPENAI_OAUTH_CALLBACK_PATH
 } from "../../../scripts/lib/account-settings.mjs";
+import { exchangeChatGptCodexOAuthCode, extractChatGptCodexAccountInfo } from "../../../scripts/lib/chatgpt-codex.mjs";
 import { buildDesktopOAuthBridgeUrl, OAUTH_HANDOFF_PROVIDERS } from "../../../scripts/lib/oauth-handoff-contract.js";
 import {
   buildHostedOAuthContinuationParams,
@@ -20,28 +19,21 @@ import {
   validateHostedOAuthCallbackParams
 } from "../shared-oauth.mjs";
 
-const PKCE_COOKIE_NAME = "treema_github_oauth";
-const PROVIDER_ID = "github-copilot";
-const PROVIDER_LABEL = "GitHub Copilot";
-
-function buildTokenTransferParams(params, exchange, profile) {
-  return {
-    code: params.code || "",
-    state: params.state || "",
-    access_token: exchange.accessToken || "",
-    token_type: exchange.tokenType || "",
-    scope: exchange.scope || "",
-    account_login: profile?.accountLogin || "",
-    account_label: profile?.accountLabel || ""
-  };
-}
+const PKCE_COOKIE_NAME = "treema_openai_oauth";
+const PROVIDER_ID = "chatgpt-codex";
+const PROVIDER_LABEL = "ChatGPT Codex";
 
 export async function GET(request) {
   const url = new URL(request.url);
-  const callbackUrl = `${url.origin}${GITHUB_OAUTH_CALLBACK_PATH}`;
+  const callbackUrl = `${url.origin}${OPENAI_OAUTH_CALLBACK_PATH}`;
   const params = buildHostedOAuthContinuationParams(url.searchParams);
-  const receipt = createGitHubOAuthReceipt(params);
+  const receipt = createOpenAiOAuthReceipt(params);
   const callbackValidationError = validateHostedOAuthCallbackParams(params, PROVIDER_LABEL);
+  const baseHeaders = {
+    "Cache-Control": "no-store",
+    "Set-Cookie": clearHostedPkceCookieHeader(PKCE_COOKIE_NAME)
+  };
+
   if (callbackValidationError) {
     return new Response(
       renderHostedOAuthCallbackErrorPage({
@@ -50,27 +42,21 @@ export async function GET(request) {
         callbackUrl,
         receipt,
         message: callbackValidationError,
-        target: "unknown",
-        title: "GitHub Authorization Failed"
+        target: "unknown"
       }),
       {
       status: 400,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "no-store",
-        "Set-Cookie": clearHostedPkceCookieHeader(PKCE_COOKIE_NAME)
+        ...baseHeaders
       }
       }
     );
   }
 
-  const decoded = decodeGitHubOAuthState(params.state);
+  const decoded = decodeOpenAiOAuthState(params.state);
   const target = resolveHostedOAuthCallbackTarget(decoded);
-  const pkceCookie = decodeGitHubOAuthPkceSession(getCookieValue(request.headers.get("cookie"), PKCE_COOKIE_NAME));
-  const baseHeaders = {
-    "Cache-Control": "no-store",
-    "Set-Cookie": clearHostedPkceCookieHeader(PKCE_COOKIE_NAME)
-  };
+  const pkceCookie = decodeOpenAiOAuthPkceSession(getCookieValue(request.headers.get("cookie"), PKCE_COOKIE_NAME));
 
   if (!decoded.ok) {
     return new Response(
@@ -79,9 +65,8 @@ export async function GET(request) {
         providerLabel: PROVIDER_LABEL,
         callbackUrl,
         receipt,
-        message: "The GitHub OAuth state was invalid, malformed, or expired.",
-        target,
-        title: "GitHub Authorization Failed"
+        message: "The OpenAI OAuth state was invalid, malformed, or expired.",
+        target
       }),
       {
         status: 400,
@@ -100,9 +85,8 @@ export async function GET(request) {
         providerLabel: PROVIDER_LABEL,
         callbackUrl,
         receipt,
-        message: "The GitHub OAuth PKCE session was missing, expired, or did not match this callback.",
-        target,
-        title: "GitHub Authorization Failed"
+        message: "The OpenAI OAuth PKCE session was missing, expired, or did not match this callback.",
+        target
       }),
       {
         status: 400,
@@ -122,8 +106,7 @@ export async function GET(request) {
         callbackUrl,
         receipt,
         message: receipt.message,
-        target,
-        title: "GitHub Authorization Failed"
+        target
       }),
       {
       status: 400,
@@ -136,19 +119,17 @@ export async function GET(request) {
   }
 
   let exchanged;
-  let profile;
+  let accountInfo;
   try {
-    exchanged = await exchangeGitHubOAuthCode(
-      {
-        code: params.code,
-        redirectUri: callbackUrl,
-        codeVerifier: pkceCookie.payload.codeVerifier
-      },
-      {
-        callbackUrl
-      }
-    );
-    profile = await fetchGitHubAuthenticatedUser(exchanged.accessToken);
+    exchanged = await exchangeChatGptCodexOAuthCode({
+      code: params.code,
+      codeVerifier: pkceCookie.payload.codeVerifier,
+      redirectUri: callbackUrl
+    });
+    accountInfo = extractChatGptCodexAccountInfo({
+      accessToken: exchanged.accessToken,
+      idToken: exchanged.idToken
+    });
   } catch (error) {
     return new Response(
       renderHostedOAuthCallbackErrorPage({
@@ -156,9 +137,8 @@ export async function GET(request) {
         providerLabel: PROVIDER_LABEL,
         callbackUrl,
         receipt,
-        message: error.message || "GitHub token exchange failed.",
-        target,
-        title: "GitHub Authorization Failed"
+        message: error.message || "OpenAI token exchange failed.",
+        target
       }),
       {
       status: 400,
@@ -171,8 +151,7 @@ export async function GET(request) {
   }
 
   if (decoded.payload.target === "web") {
-    const redirectUrl = buildGitHubOAuthWebCompleteUrl({
-      provider: PROVIDER_ID,
+    const redirectUrl = buildOpenAiOAuthWebCompleteUrl({
       target: decoded.payload.target,
       result: "success",
       state: params.state
@@ -180,31 +159,40 @@ export async function GET(request) {
     const fragmentPayload = encodeHostedOAuthFragmentPayload({
       provider: PROVIDER_ID,
       accessToken: exchanged.accessToken,
-      tokenType: exchanged.tokenType,
-      scope: exchanged.scope,
-      accountLogin: profile.accountLogin,
-      accountLabel: profile.accountLabel,
+      refreshToken: exchanged.refreshToken,
+      expiresAt: exchanged.expiresAt,
+      accountId: accountInfo.accountId || "",
+      accountEmail: accountInfo.accountEmail || "",
+      accountLabel: accountInfo.accountLabel || accountInfo.accountEmail || accountInfo.accountId || "",
       connectedAt: new Date().toISOString()
     });
-
     return new Response(null, {
       status: 302,
       headers: {
-        Location: `${redirectUrl}#github_oauth=${fragmentPayload}`,
+        Location: `${redirectUrl}#openai_oauth=${encodeURIComponent(fragmentPayload)}`,
         ...baseHeaders
       }
     });
   }
 
-  const deepLinkUrl = buildGitHubOAuthDesktopDeepLink({
+  const deepLinkUrl = buildOpenAiOAuthDesktopDeepLink({
+    ...params,
     provider: PROVIDER_ID,
-    status: "connected",
-    session_hint: decoded.payload.sessionHint
+    status: "connected"
   });
-  const transferPayload = buildTokenTransferParams(params, exchanged, profile);
+  const transferPayload = {
+    code: params.code,
+    state: params.state,
+    access_token: exchanged.accessToken,
+    refresh_token: exchanged.refreshToken,
+    expires_at: exchanged.expiresAt,
+    account_id: accountInfo.accountId || "",
+    account_email: accountInfo.accountEmail || "",
+    account_label: accountInfo.accountLabel || ""
+  };
   return new Response(
     renderHostedOAuthDesktopHandoffPage({
-      bridgeUrl: buildDesktopOAuthBridgeUrl(OAUTH_HANDOFF_PROVIDERS.GITHUB),
+      bridgeUrl: buildDesktopOAuthBridgeUrl(OAUTH_HANDOFF_PROVIDERS.OPENAI),
       callbackUrl,
       deepLinkUrl,
       failureFlowLabel: PROVIDER_LABEL,

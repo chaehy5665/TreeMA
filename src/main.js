@@ -5,6 +5,7 @@ import {
   countSidebarProjects,
   sanitizeSidebarLocation
 } from "./lib/sidebar.js";
+import { createProviderSettingsController } from "./lib/provider-settings.js";
 import { validateState } from "./lib/validate-state.js";
 
 const STATUS_COLUMNS = ["backlog", "ready", "in_progress", "blocked", "done"];
@@ -138,7 +139,7 @@ const SETTINGS_SECTION_CONFIG = [
     id: "ai-accounts",
     group: "Server",
     label: "Providers",
-    description: "OpenAI API and GitHub Copilot connections.",
+    description: "OpenAI API, ChatGPT Codex OAuth, and GitHub Copilot connections.",
     icon: "server"
   }
 ];
@@ -155,6 +156,20 @@ let uiSettings = loadUiSettings();
 let activeTab = uiSettings.defaultTab;
 let activeSidebarSelectionId = `utility:${activeTab}`;
 let activeSettingsSection = "general";
+
+const providerSettingsController = createProviderSettingsController({
+  apiFetch,
+  desktopBridge,
+  openExternalUrl,
+  updateScanActionButtons,
+  escapeHtml,
+  formatDate,
+  getToneCardClass,
+  getVerificationToneClass,
+  onAccountSettingsChange(nextAccountSettings) {
+    accountSettings = nextAccountSettings;
+  }
+});
 
 function sanitizeTab(tab) {
   return TAB_CONFIG.some((item) => item.id === tab) ? tab : DEFAULT_UI_SETTINGS.defaultTab;
@@ -664,6 +679,40 @@ function getToneCardClass(tone) {
   return "";
 }
 
+function buildProjectScanButtonTitle(settings) {
+  return settings?.analysisProvider?.available
+    ? "Run Project Scan"
+    : settings?.analysisProvider?.blockedReason || "Project Scan is unavailable.";
+}
+
+function buildQuickScanButtonTitle() {
+  return getCurrentProjectPath()
+    ? "Run deterministic Quick Scan"
+    : "Connect a project before running Quick Scan.";
+}
+
+function updateScanActionButtons() {
+  const projectConnected = Boolean(getCurrentProjectPath());
+  const projectScanAvailable = accountSettings?.analysisProvider?.available ?? false;
+
+  if (analyzeProjectButtonEl) {
+    analyzeProjectButtonEl.disabled = !projectConnected || !projectScanAvailable;
+    analyzeProjectButtonEl.title = !projectConnected
+      ? "Connect a project before running a scan."
+      : buildProjectScanButtonTitle(accountSettings);
+  }
+
+  if (quickScanButtonEl) {
+    quickScanButtonEl.disabled = !projectConnected;
+    quickScanButtonEl.title = buildQuickScanButtonTitle();
+  }
+}
+
+function normalizeDesktopErrorMessage(error) {
+  const rawMessage = typeof error?.message === "string" ? error.message : String(error || "Request failed.");
+  return rawMessage.replace(/^Error invoking remote method '[^']+':\s*/u, "").trim() || "Request failed.";
+}
+
 function hasSemanticScanProvider(settings) {
   const openaiConnected = settings?.providers?.openai?.connected ?? false;
   const githubCopilotConnected = settings?.providers?.githubCopilot?.connected ?? false;
@@ -890,61 +939,77 @@ function setActiveTab(tabId, selectionId = null) {
 
 async function apiFetch(pathname, options = {}) {
   if (desktopBridge) {
-    const method = options.method || "GET";
-    const requestUrl = new URL(pathname, "http://treema.local");
-    const body = options.body ? JSON.parse(options.body) : {};
+    try {
+      const method = options.method || "GET";
+      const requestUrl = new URL(pathname, "http://treema.local");
+      const body = options.body ? JSON.parse(options.body) : {};
 
-    if (method === "GET" && requestUrl.pathname === "/api/settings/accounts") {
-      return desktopBridge.loadAccountSettings();
+      if (method === "GET" && requestUrl.pathname === "/api/settings/accounts") {
+        return desktopBridge.loadAccountSettings();
+      }
+
+      if (method === "GET" && requestUrl.pathname === "/api/workspace") {
+        return desktopBridge.loadWorkspace(requestUrl.searchParams.get("projectPath") || "");
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/system/select-directory") {
+        return { projectPath: await desktopBridge.selectDirectory() };
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/openai") {
+        return desktopBridge.saveAccountSettings("openai", body);
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/openai/test") {
+        return desktopBridge.testAccountSettings("openai", body);
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/github-copilot") {
+        return desktopBridge.saveAccountSettings("github-copilot", body);
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/github-copilot/test") {
+        return desktopBridge.testAccountSettings("github-copilot", body);
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/chatgpt-codex") {
+        return desktopBridge.saveAccountSettings("chatgpt-codex", body);
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/chatgpt-codex/test") {
+        return desktopBridge.testAccountSettings("chatgpt-codex", body);
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/preferences") {
+        return desktopBridge.saveAccountPreferences(body);
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/disconnect") {
+        return desktopBridge.disconnectAccountSettings(body.provider);
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/workspace/init") {
+        return desktopBridge.initWorkspace(body.projectPath, body.projectName || "");
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/workspace/snapshot") {
+        return desktopBridge.snapshotWorkspace({
+          projectPath: body.projectPath,
+          summary: body.summary,
+          focus: body.focus ?? [],
+          next: body.next ?? [],
+          risks: body.risks ?? []
+        });
+      }
+
+      if (method === "POST" && requestUrl.pathname === "/api/project/analyze") {
+        return desktopBridge.analyzeProject(body.projectPath, body.mode || "project");
+      }
+
+      throw new Error(`Unsupported desktop API route: ${method} ${requestUrl.pathname}`);
+    } catch (error) {
+      throw new Error(normalizeDesktopErrorMessage(error));
     }
-
-    if (method === "GET" && requestUrl.pathname === "/api/workspace") {
-      return desktopBridge.loadWorkspace(requestUrl.searchParams.get("projectPath") || "");
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/system/select-directory") {
-      return { projectPath: await desktopBridge.selectDirectory() };
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/openai") {
-      return desktopBridge.saveAccountSettings("openai", body);
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/openai/test") {
-      return desktopBridge.testAccountSettings("openai", body);
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/github-copilot") {
-      return desktopBridge.saveAccountSettings("github-copilot", body);
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/github-copilot/test") {
-      return desktopBridge.testAccountSettings("github-copilot", body);
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/settings/accounts/disconnect") {
-      return desktopBridge.disconnectAccountSettings(body.provider);
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/workspace/init") {
-      return desktopBridge.initWorkspace(body.projectPath, body.projectName || "");
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/workspace/snapshot") {
-      return desktopBridge.snapshotWorkspace({
-        projectPath: body.projectPath,
-        summary: body.summary,
-        focus: body.focus ?? [],
-        next: body.next ?? [],
-        risks: body.risks ?? []
-      });
-    }
-
-    if (method === "POST" && requestUrl.pathname === "/api/project/analyze") {
-      return desktopBridge.analyzeProject(body.projectPath, body.mode || "project");
-    }
-
-    throw new Error(`Unsupported desktop API route: ${method} ${requestUrl.pathname}`);
   }
 
   const response = await fetch(pathname, {
@@ -1484,7 +1549,7 @@ function renderProjectAnalysis(analysis) {
         <p class="muted">${
           scanMode === "quick"
             ? "Quick Scan does not synthesize critical flows."
-            : "The system map does not yet expose a confident primary path."
+            : "The analysis bundle does not yet expose a confident primary path."
         }</p>
       </article>
     `;
@@ -1505,6 +1570,7 @@ function renderProjectAnalysis(analysis) {
     `;
   renderScanInspector(currentScanEntries.get(activeScanSelectionId) ?? null, validationSummary);
   syncActiveScanSelection();
+  updateScanActionButtons();
   renderSidebarNav();
   renderInspector();
 }
@@ -1699,50 +1765,6 @@ function bindInspectorControls() {
   settingsAutoOpenScanEl.addEventListener("change", () => {
     updateUiSettings({ autoOpenScan: settingsAutoOpenScanEl.checked });
   });
-
-  settingsOpenAiLoginEl.addEventListener("click", async () => {
-    try {
-      await openExternalUrl(OPENAI_LOGIN_URL);
-      renderInlineAccountActionStatus(
-        settingsOpenAiStatusEl,
-        "Opened OpenAI login in your browser. After login, create or paste an API key below if direct API access is needed."
-      );
-    } catch (error) {
-      renderInlineAccountActionStatus(settingsOpenAiStatusEl, error.message, "error");
-    }
-  });
-
-  settingsOpenAiSaveEl.addEventListener("click", async () => {
-    await runAccountProviderAction("openai", "save");
-  });
-
-  settingsOpenAiTestEl.addEventListener("click", async () => {
-    await runAccountProviderAction("openai", "test");
-  });
-
-  settingsOpenAiDisconnectEl.addEventListener("click", async () => {
-    await runAccountProviderAction("openai", "disconnect");
-  });
-
-  settingsGitHubCopilotRegisterEl.addEventListener("click", async () => {
-    try {
-      await startGitHubOAuthConnection();
-    } catch (error) {
-      renderInlineAccountActionStatus(settingsGitHubCopilotStatusEl, error.message, "error");
-    }
-  });
-
-  settingsGitHubCopilotSaveEl.addEventListener("click", async () => {
-    await runAccountProviderAction("github-copilot", "save");
-  });
-
-  settingsGitHubCopilotTestEl.addEventListener("click", async () => {
-    await runAccountProviderAction("github-copilot", "test");
-  });
-
-  settingsGitHubCopilotDisconnectEl.addEventListener("click", async () => {
-    await runAccountProviderAction("github-copilot", "disconnect");
-  });
 }
 
 function bindScanInteractions() {
@@ -1889,6 +1911,12 @@ async function runAnalysis(mode) {
     return;
   }
 
+  if (mode === "project" && !(accountSettings?.analysisProvider?.available ?? false)) {
+    renderWorkspaceStatus(buildProjectScanButtonTitle(accountSettings), "warning");
+    updateScanActionButtons();
+    return;
+  }
+
   renderWorkspaceStatus(mode === "quick" ? "Running Quick Scan..." : "Running Project Scan...");
   try {
     const payload = await apiFetch("/api/project/analyze", {
@@ -1999,13 +2027,14 @@ function bindImportExport() {
 async function init() {
   syncSettingsControls();
   applyUiSettings();
-  syncAccountSettingsControls();
+  providerSettingsController.syncAccountSettingsControls();
   openSettingsButtonEl.setAttribute("aria-expanded", "false");
   bindSidebarNavigation();
   renderWorkspaceStatus("Use Add in the Projects sidebar to connect or create a workspace.");
   renderApp(currentState, currentProposal, currentDocs);
   renderProjectAnalysis(currentAnalysis);
   bindInspectorControls();
+  providerSettingsController.bindEvents();
   bindScanInteractions();
   bindWorkspaceControls();
   bindImportExport();
@@ -2013,15 +2042,11 @@ async function init() {
   setActiveTab(uiSettings.defaultTab);
   if (desktopBridge?.onOAuthComplete) {
     desktopBridge.onOAuthComplete(async (payload = {}) => {
-      await refreshAccountSettings();
-      renderInlineAccountActionStatus(
-        settingsGitHubCopilotStatusEl,
-        payload.completion?.message || "GitHub OAuth returned to the desktop app.",
-        payload.completion?.ok ? "ok" : "error"
-      );
+      await providerSettingsController.refreshAccountSettings();
+      providerSettingsController.handleOAuthComplete(payload);
     });
   }
-  await refreshAccountSettings();
+  await providerSettingsController.refreshAccountSettings();
   await restoreLastWorkspace();
 }
 

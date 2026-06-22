@@ -8,18 +8,27 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import { analyzeProject, persistProjectAnalysis } from "./lib/project-analysis.mjs";
+import { CHATGPT_CODEX_PROVIDER } from "./lib/chatgpt-codex.mjs";
 import {
   buildGitHubOAuthCallbackRuntime,
   buildGitHubOAuthCallbackUrl,
+  buildOpenAiOAuthCallbackRuntime,
+  buildOpenAiOAuthCallbackUrl,
   connectGitHubOAuthToken,
   createGitHubOAuthConnectedReceipt,
+  completeOpenAiOAuthFlow,
   disconnectAccountSettings,
   exchangeGitHubOAuthCode,
   GITHUB_OAUTH_CALLBACK_PATH,
   loadAccountSettings,
+  OPENAI_OAUTH_CALLBACK_PATH,
+  OPENAI_OAUTH_LOCAL_PORT,
   recordGitHubOAuthCallback,
+  renderOpenAiOAuthCallbackPage,
   renderGitHubOAuthCallbackPage,
+  saveAccountPreferences,
   saveAccountSettings,
+  startOpenAiOAuthFlow,
   testAccountSettings
 } from "./lib/account-settings.mjs";
 import { exists, initWorkspace, loadWorkspace, snapshotWorkspace } from "./lib/treema-workspace.mjs";
@@ -29,6 +38,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const port = Number(process.env.PORT || 4173);
 const execFileAsync = promisify(execFile);
+let openAiOAuthLoopbackServer = null;
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -49,13 +59,76 @@ function sendHtml(response, statusCode, html) {
   response.end(html);
 }
 
+function maskSensitiveText(value) {
+  const text = String(value || "");
+  const mask = (token) => {
+    const normalized = String(token || "");
+    if (normalized.length <= 8) {
+      return "••••";
+    }
+    return `${normalized.slice(0, 4)}••••${normalized.slice(-4)}`;
+  };
+
+  return text
+    .replace(/\bsk-[A-Za-z0-9_-]+\b/g, (match) => mask(match))
+    .replace(/\bgh[opusr]_[A-Za-z0-9_]+\b/g, (match) => mask(match))
+    .replace(/\bgithub_pat_[A-Za-z0-9_]+\b/g, (match) => mask(match))
+    .replace(/(Bearer\s+)([A-Za-z0-9._-]+)/gi, (_, prefix, token) => `${prefix}${mask(token)}`);
+}
+
+function sanitizeErrorPayload(value) {
+  if (typeof value === "string") {
+    return maskSensitiveText(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeErrorPayload(item));
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, sanitizeErrorPayload(item)]));
+  }
+  return value ?? null;
+}
+
+function createRequestError(message, code = "INVALID_REQUEST") {
+  const error = new Error(message);
+  error.code = code;
+  error.statusCode = 400;
+  return error;
+}
+
+function getAccountSettingsRuntimeOptions() {
+  return {
+    githubOAuth: buildGitHubOAuthCallbackRuntime(buildGitHubOAuthCallbackUrl(`http://localhost:${port}`)),
+    openaiOAuth: buildOpenAiOAuthCallbackRuntime(buildOpenAiOAuthCallbackUrl(`http://localhost:${OPENAI_OAUTH_LOCAL_PORT}`))
+  };
+}
+
+function getAllowedCorsOrigin(request) {
+  const origin = String(request.headers.origin || "");
+  if (
+    origin === "https://app.treesma.com" ||
+    origin === "http://localhost:4173" ||
+    origin === "http://127.0.0.1:4173"
+  ) {
+    return origin;
+  }
+  return "";
+}
+
 async function readBody(request) {
   const chunks = [];
   for await (const chunk of request) {
     chunks.push(chunk);
   }
   const raw = Buffer.concat(chunks).toString("utf8");
-  return raw ? JSON.parse(raw) : {};
+  if (!raw) {
+    return {};
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw createRequestError("Request body must be valid JSON.", "INVALID_JSON_BODY");
+  }
 }
 
 function safePathname(pathname) {
@@ -192,10 +265,22 @@ async function serveStatic(request, response, pathname) {
 
 async function handleApi(request, response, url) {
   try {
-    if (request.method === "GET" && url.pathname === "/api/settings/accounts") {
-      const settings = await loadAccountSettings({
-        githubOAuth: buildGitHubOAuthCallbackRuntime(buildGitHubOAuthCallbackUrl(`http://127.0.0.1:${port}`))
+    const corsOrigin = getAllowedCorsOrigin(request);
+
+    if (request.method === "OPTIONS" && url.pathname === "/api/settings/accounts/chatgpt-codex/connect") {
+      response.writeHead(204, {
+        ...(corsOrigin ? { "Access-Control-Allow-Origin": corsOrigin } : {}),
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "600",
+        Vary: "Origin"
       });
+      response.end();
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/settings/accounts") {
+      const settings = await loadAccountSettings(getAccountSettingsRuntimeOptions());
       sendJson(response, 200, settings);
       return;
     }
@@ -219,28 +304,87 @@ async function handleApi(request, response, url) {
 
     if (request.method === "POST" && url.pathname === "/api/settings/accounts/openai") {
       const body = await readBody(request);
-      const settings = await saveAccountSettings("openai", body);
+      const settings = await saveAccountSettings("openai", body, getAccountSettingsRuntimeOptions());
       sendJson(response, 200, settings);
       return;
     }
 
     if (request.method === "POST" && url.pathname === "/api/settings/accounts/openai/test") {
       const body = await readBody(request);
-      const settings = await testAccountSettings("openai", body);
+      const settings = await testAccountSettings("openai", body, getAccountSettingsRuntimeOptions());
       sendJson(response, 200, settings);
       return;
     }
 
     if (request.method === "POST" && url.pathname === "/api/settings/accounts/github-copilot") {
       const body = await readBody(request);
-      const settings = await saveAccountSettings("github-copilot", body);
+      const settings = await saveAccountSettings("github-copilot", body, getAccountSettingsRuntimeOptions());
       sendJson(response, 200, settings);
       return;
     }
 
     if (request.method === "POST" && url.pathname === "/api/settings/accounts/github-copilot/test") {
       const body = await readBody(request);
-      const settings = await testAccountSettings("github-copilot", body);
+      const settings = await testAccountSettings("github-copilot", body, getAccountSettingsRuntimeOptions());
+      sendJson(response, 200, settings);
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/settings/accounts/chatgpt-codex") {
+      const body = await readBody(request);
+      const settings = await saveAccountSettings(CHATGPT_CODEX_PROVIDER, body, getAccountSettingsRuntimeOptions());
+      sendJson(response, 200, settings);
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/settings/accounts/chatgpt-codex/test") {
+      const body = await readBody(request);
+      const settings = await testAccountSettings(CHATGPT_CODEX_PROVIDER, body, getAccountSettingsRuntimeOptions());
+      sendJson(response, 200, settings);
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/settings/accounts/chatgpt-codex/oauth/start") {
+      const body = await readBody(request);
+      const target = body.target === "desktop" ? "desktop" : "web";
+      const returnPath = typeof body.returnPath === "string" ? body.returnPath : "/settings/accounts";
+      const callbackUrl = buildOpenAiOAuthCallbackUrl(`http://localhost:${OPENAI_OAUTH_LOCAL_PORT}`);
+      if (target === "desktop") {
+        const started = await startOpenAiOAuthFlow({ returnPath, target, callbackUrl });
+        sendJson(response, 200, started);
+        return;
+      }
+
+      const started = await startOpenAiOAuthFlow({
+        returnPath,
+        target,
+        callbackUrl
+      });
+      sendJson(response, 200, {
+        authorizeUrl: started.authorizeUrl,
+        target
+      });
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/settings/accounts/chatgpt-codex/connect") {
+      if (!corsOrigin) {
+        sendJson(response, 403, { error: "origin_not_allowed" });
+        return;
+      }
+
+      response.writeHead(410, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Access-Control-Allow-Origin": corsOrigin,
+        Vary: "Origin"
+      });
+      response.end(JSON.stringify({ error: "local_bridge_no_longer_required" }));
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/settings/accounts/preferences") {
+      const body = await readBody(request);
+      const settings = await saveAccountPreferences(body, getAccountSettingsRuntimeOptions());
       sendJson(response, 200, settings);
       return;
     }
@@ -251,7 +395,7 @@ async function handleApi(request, response, url) {
         sendJson(response, 400, { error: "provider is required" });
         return;
       }
-      const settings = await disconnectAccountSettings(body.provider);
+      const settings = await disconnectAccountSettings(body.provider, getAccountSettingsRuntimeOptions());
       sendJson(response, 200, settings);
       return;
     }
@@ -311,17 +455,21 @@ async function handleApi(request, response, url) {
 
     sendJson(response, 404, { error: "API route not found" });
   } catch (error) {
-    const statusCode = error?.code === "PROJECT_SCAN_UNAVAILABLE" ? 400 : 500;
+    const statusCode = Number.isInteger(error?.statusCode)
+      ? error.statusCode
+      : error?.code === "PROJECT_SCAN_UNAVAILABLE"
+        ? 409
+        : 500;
     sendJson(response, statusCode, {
-      error: error.message,
+      error: maskSensitiveText(error?.message || "Server error"),
       code: error?.code || "SERVER_ERROR",
-      details: error?.details || null
+      details: sanitizeErrorPayload(error?.details || null)
     });
   }
 }
 
 async function handleGitHubOAuthCallback(response, url) {
-  const callbackUrl = buildGitHubOAuthCallbackUrl(`http://127.0.0.1:${port}`);
+  const callbackUrl = buildGitHubOAuthCallbackUrl(`http://localhost:${port}`);
   const params = {
     code: url.searchParams.get("code") || "",
     state: url.searchParams.get("state") || "",
@@ -376,6 +524,46 @@ async function handleGitHubOAuthCallback(response, url) {
   sendHtml(response, oauth.lastCallback?.status === "success" ? 200 : 400, html);
 }
 
+async function handleOpenAiOAuthCallback(response, url) {
+  const callbackUrl = buildOpenAiOAuthCallbackUrl(`http://localhost:${OPENAI_OAUTH_LOCAL_PORT}`);
+  const result = await completeOpenAiOAuthFlow(
+    {
+      code: url.searchParams.get("code") || "",
+      state: url.searchParams.get("state") || "",
+      error: url.searchParams.get("error") || "",
+      error_description: url.searchParams.get("error_description") || ""
+    },
+    {
+      expectedTarget: "web",
+      openaiOAuth: buildOpenAiOAuthCallbackRuntime(callbackUrl)
+    }
+  );
+  const html = renderOpenAiOAuthCallbackPage(result.oauth.lastCallback, callbackUrl);
+  sendHtml(response, result.oauth.lastCallback?.status === "success" ? 200 : 400, html);
+}
+
+function startOpenAiLoopbackServer() {
+  if (openAiOAuthLoopbackServer) return;
+
+  openAiOAuthLoopbackServer = http.createServer(async (request, response) => {
+    const url = new URL(request.url, `http://127.0.0.1:${OPENAI_OAUTH_LOCAL_PORT}`);
+    if (request.method === "GET" && url.pathname === OPENAI_OAUTH_CALLBACK_PATH) {
+      await handleOpenAiOAuthCallback(response, url);
+      return;
+    }
+
+    response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    response.end("Not found");
+  });
+
+  openAiOAuthLoopbackServer.on("error", (error) => {
+    console.warn(`OpenAI OAuth loopback listener failed on port ${OPENAI_OAUTH_LOCAL_PORT}: ${error.message}`);
+    openAiOAuthLoopbackServer = null;
+  });
+
+  openAiOAuthLoopbackServer.listen(OPENAI_OAUTH_LOCAL_PORT, "127.0.0.1");
+}
+
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host || `127.0.0.1:${port}`}`);
   if (url.pathname.startsWith("/api/")) {
@@ -388,9 +576,15 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && url.pathname === OPENAI_OAUTH_CALLBACK_PATH) {
+    await handleOpenAiOAuthCallback(response, url);
+    return;
+  }
+
   await serveStatic(request, response, url.pathname);
 });
 
 server.listen(port, () => {
+  startOpenAiLoopbackServer();
   console.log(`Treema server running at http://127.0.0.1:${port}`);
 });
