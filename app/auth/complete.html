@@ -10,8 +10,8 @@
     <main class="app-shell">
       <header class="app-header">
         <span class="app-kicker">OAuth Complete</span>
-        <h1>GitHub returned to the TreeMA web app</h1>
-        <p>This page completes the hosted side of the GitHub OAuth flow. Web flows stay on `app.treesma.com`; desktop flows continue through `treesma://`.</p>
+        <h1>Hosted auth completion for <code>github-copilot</code> and <code>chatgpt-codex</code></h1>
+        <p>This page makes the hosted OAuth result explicit. It shows the provider, the target (`web` or `desktop`), and the current result before either browser-local fallback or TreeMA Desktop handoff continues.</p>
       </header>
 
       <section class="app-grid">
@@ -27,7 +27,7 @@
 
         <article class="app-card">
           <h2>What this surface owns</h2>
-          <p>Hosted auth completion, account connection UX, and desktop handoff live here. Local workspace mutation and secret persistence stay in the desktop runtime.</p>
+          <p>Hosted auth completion, account connection UX, browser-local fallback, and desktop handoff guidance live here. Local workspace mutation and durable secret persistence stay in the desktop runtime.</p>
         </article>
       </section>
     </main>

@@ -51,11 +51,13 @@ Provide an implementation-centered map of the current repository and its main mo
 - `vercel.json`: deployment-time config that enables extensionless public URLs and redirects `/` to the landing page on Vercel
 - `api/auth/github/start.mjs`: Vercel-hosted GitHub OAuth starter for the hosted web and desktop surfaces, including PKCE cookie setup
 - `api/auth/github/callback.mjs`: Vercel-hosted public GitHub OAuth callback function for `treesma.com`, including token exchange and handoff
+- `api/auth/openai/start.mjs`: Vercel-hosted ChatGPT Codex OAuth starter for the hosted web and desktop surfaces, including PKCE cookie setup
+- `api/auth/openai/callback.mjs`: Vercel-hosted public OpenAI OAuth callback function for `treesma.com`, including hosted token exchange and desktop handoff
 
 ### Desktop shell
 
-- `electron/main.cjs`: Electron main process, IPC handlers for workspace plus analysis actions, native folder picker integration, `treesma://` deep-link handling, desktop GitHub OAuth loopback callback listener, and local token-handoff bridge
-- `electron/preload.cjs`: isolated renderer bridge exposed as `window.treemaDesktop`, including desktop OAuth start and completion notifications
+- `electron/main.cjs`: Electron main process, IPC handlers for workspace plus analysis actions, native folder picker integration, `treesma://` deep-link handling, desktop GitHub plus OpenAI OAuth loopback listeners, local token-handoff bridges, and cache-busted runtime-module imports during development
+- `electron/preload.cjs`: isolated renderer bridge exposed as `window.treemaDesktop`, including desktop OAuth start flows, provider-preference persistence, analysis execution, workspace actions, and OAuth completion notifications
 
 ### Shared domain logic
 
@@ -65,7 +67,23 @@ Provide an implementation-centered map of the current repository and its main mo
 
 ### Server and CLI
 
-- `scripts/app-server.mjs`: static server plus `/api/workspace`, `/api/project/analyze`, `/api/settings/accounts`, local mutation routes, and the browser GitHub OAuth callback endpoint
+- `scripts/app-server.mjs`: static server plus explicit local runtime routes:
+  - `GET /api/settings/accounts`
+  - `POST /api/settings/accounts/openai`
+  - `POST /api/settings/accounts/openai/test`
+  - `POST /api/settings/accounts/github-copilot`
+  - `POST /api/settings/accounts/github-copilot/test`
+  - `POST /api/settings/accounts/chatgpt-codex`
+  - `POST /api/settings/accounts/chatgpt-codex/test`
+  - `POST /api/settings/accounts/chatgpt-codex/oauth/start`
+  - `POST /api/settings/accounts/chatgpt-codex/connect`
+  - `POST /api/settings/accounts/preferences`
+  - `POST /api/settings/accounts/disconnect`
+  - `GET /api/workspace`
+  - `POST /api/workspace/init`
+  - `POST /api/workspace/snapshot`
+  - `POST /api/project/analyze`
+  - `POST /api/system/select-directory`
 - `scripts/treema.mjs`: CLI for `init`, `snapshot`, and `analyze`
 - `scripts/validate-state.mjs`: CLI validation runner
 - `scripts/check-docs.mjs`: repo and workspace docs/schema contract validator
@@ -74,15 +92,20 @@ Provide an implementation-centered map of the current repository and its main mo
 
 - `api/auth/github/start.mjs`: Vercel function that creates hosted GitHub OAuth state, sets PKCE cookie state, and redirects to GitHub authorize
 - `api/auth/github/callback.mjs`: Vercel function that validates GitHub OAuth state, exchanges tokens, and routes to `app.treesma.com` or the desktop loopback bridge
+- `api/auth/openai/start.mjs`: Vercel function that creates hosted ChatGPT Codex OAuth state, sets PKCE cookie state, and redirects to OpenAI authorize
+- `api/auth/openai/callback.mjs`: Vercel function that validates OpenAI OAuth state, exchanges tokens, and routes to `app.treesma.com` or the desktop loopback bridge
 - `vercel.json`: host-based rewrites for `app.treesma.com`, plus the public hosted callback rewrite while keeping landing/legal clean URLs
 
 ### Workspace and analysis libraries
 
-- `scripts/lib/account-settings.mjs`: local AI account settings persistence, GitHub OAuth state/PKCE/token helpers, callback receipt storage, and provider verification outside `.treema`
+- `scripts/lib/account-settings.mjs`: local AI account settings persistence in `~/.treema/settings/accounts.json`, default provider selection, provider-agnostic OAuth state or PKCE helpers, callback receipt storage, scan-readiness metadata, secret masking, and provider verification outside `.treema`
+- `scripts/lib/chatgpt-codex.mjs`: experimental ChatGPT Codex OAuth adapter, JWT account extraction, token exchange or refresh helpers, backend request shaping, and response-text extraction
+- `scripts/lib/github-models.mjs`: shared GitHub Models catalog and lightweight inference-access probing used by account verification and Project Scan
 - `scripts/lib/env-loader.mjs`: repo-local `.env.local` and `.env` loader for local runtime entrypoints
+- `scripts/lib/oauth-handoff-contract.js`: shared desktop deep-link and loopback handoff contract for hosted OAuth completion
 - `scripts/lib/treema-workspace.mjs`: template generation, workspace load, and snapshot persistence
 - `scripts/lib/project-analysis.mjs`: top-level staged analysis orchestrator and load/persist entrypoint
-- `scripts/lib/analysis/ai-client.mjs`: OpenAI-backed stage execution, caching, and JSON response handling for Project Scan
+- `scripts/lib/analysis/ai-client.mjs`: provider-aware stage execution, caching, structured-content extraction, and JSON repair handling for OpenAI API, GitHub Copilot, and ChatGPT Codex OAuth Project Scan
 - `scripts/lib/analysis/contracts.mjs`: shared stage constants, artifact metadata helpers, and path contracts
 - `scripts/lib/analysis/scanner.mjs`: deterministic evidence extraction plus AI-native semantic intake
 - `scripts/lib/analysis/junior-analyst.mjs`: AI-grounded per-component structured analysis generation
@@ -107,6 +130,9 @@ TreeMA/
 ├── README.md
 ├── api/
 │   └── auth/
+│       ├── openai/
+│       │   ├── start.mjs
+│       │   └── callback.mjs
 │       └── github/
 │           ├── start.mjs
 │           └── callback.mjs
@@ -157,6 +183,9 @@ TreeMA/
 │   ├── validate-state.mjs
 │   └── lib/
 │       ├── account-settings.mjs
+│       ├── chatgpt-codex.mjs
+│       ├── github-models.mjs
+│       ├── oauth-handoff-contract.js
 │       ├── project-analysis.mjs
 │       ├── treema-workspace.mjs
 │       └── analysis/
@@ -195,3 +224,22 @@ flowchart LR
     W --> T[".treema/project_state.json + workspace docs"]
     PA --> P[".treema/analysis/project-structure.json + stage artifacts"]
 ```
+
+## Contract Notes
+
+- `src/main.js` uses one logical runtime contract in two transport modes:
+  - browser mode through `fetch('/api/*')`
+  - desktop mode through `window.treemaDesktop.*`
+- `electron/preload.cjs` is the canonical renderer bridge surface for desktop mode. It exposes account settings, workspace, analysis, external-link, and OAuth-completion helpers only.
+- `scripts/lib/oauth-handoff-contract.js` is the shared contract for desktop handoff URLs and `treesma://auth/complete` deep links used by hosted callback pages and the hosted auth-complete page.
+- `scripts/lib/project-analysis.mjs` is the canonical scan orchestrator for both CLI and UI-triggered Project Scan.
+- `.treema/analysis/project-structure.json` is the single manifest that points the UI at all emitted stage artifacts, including execution-plan outputs when the validator gate is `ready`.
+- Local provider credentials persist outside project workspaces in `~/.treema/settings/accounts.json`. When `TREEMA_SETTINGS_HOME` is set (QA sandbox), the settings home is that directory and the account settings file path is treated as `${TREEMA_SETTINGS_HOME}/.treema/settings/accounts.json`.
+- Route ownership is intentionally split:
+  - local workspace shell: `index.html`, `src/main.js`, `styles.css`
+  - hosted control plane: `app/index.html`, `app/app.js`, `app/app.css`, `app/auth/complete.html`, `app/settings/accounts.html`, `app/settings/download.html`
+- Persistence ownership is also intentionally split by canonical writer, not by entrypoint:
+  - `.treema` workspace reads and writes: `scripts/lib/treema-workspace.mjs`
+  - `.treema/analysis` writes: `scripts/lib/project-analysis.mjs` and `scripts/lib/analysis/persist.mjs`
+  - local account settings writes: `scripts/lib/account-settings.mjs`
+- Contract enforcement runs through `scripts/check-docs.mjs`, `npm run validate:docs`, and `npm run validate`.

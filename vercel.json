@@ -45,6 +45,10 @@
     {
       "source": "/auth/github/callback",
       "destination": "/api/auth/github/callback"
+    },
+    {
+      "source": "/auth/openai/callback",
+      "destination": "/api/auth/openai/callback"
     }
   ],
   "redirects": [
